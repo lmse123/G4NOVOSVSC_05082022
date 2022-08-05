@@ -1,0 +1,9 @@
+# Macro file for range verification test
+
+/run/initialize
+
+# proton 200 MeV 
+/gun/particle proton
+/gun/energy 200 MeV
+#
+/run/beamOn 1000

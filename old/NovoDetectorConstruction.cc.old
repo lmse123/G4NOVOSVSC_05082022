@@ -1,0 +1,129 @@
+/*
+ * G4Rangeverifcation:
+ * Defining the detector
+ * Source file
+ * Author: Kyrre Skjerdal (kyrre.skjerdal@hvl.no)
+ */
+
+/// \file RangeverificationDetectorConstruction.hh
+/// \brief Implementation of the RangeverificationDetectorConstruction class
+
+#include "NovoDetectorConstruction.hh"
+
+
+#include "G4RunManager.hh"
+#include "G4NistManager.hh"
+#include "G4Box.hh"
+#include "G4LogicalVolume.hh"
+#include "G4PVPlacement.hh"
+#include "G4SystemOfUnits.hh"
+#include "G4PhysicalConstants.hh"
+#include "G4SDManager.hh"
+
+
+
+NovoDetectorConstruction::NovoDetectorConstruction()
+:	G4VUserDetectorConstruction(),
+	fScoringVolume(0)
+{ }
+
+
+NovoDetectorConstruction::~NovoDetectorConstruction()
+{ }
+
+G4VPhysicalVolume* NovoDetectorConstruction::Construct()
+{
+
+	
+
+	
+
+
+	ConstructWorld();
+
+	ConstructPillar(0);
+
+	return fPhysWorld;
+
+}
+
+void NovoDetectorConstruction::ConstructWorld()
+{
+	// Get nist material manager
+	G4NistManager* nist = G4NistManager::Instance();
+	
+	// Option to switch on/off checking of volumes overlaps
+	//
+	G4bool checkOverlaps = true;
+	
+    /*
+	* Defining the world of the experiment. A box of 0.5*0.5*0.5 m^3
+	*/
+
+	//Size of the world in x, y and z
+	G4double worldX = 0.5*m;
+	G4double worldY = 0.5*m;
+	G4double worldZ = 0.5*m;
+
+	// Defining the material of the world.
+	G4Material* worldMat = nist->FindOrBuildMaterial("G4_AIR");
+
+	// World solid. Defining the shape (Box)
+	fSolidWorld = new G4Box("WorldSV", 	// The name
+		worldX/2, 						// Half length, x
+		worldY/2,  						// Half length, y
+		worldZ/2); 						// Half length, z
+
+	// World logical volume:
+	fLogicWorld =
+		new G4LogicalVolume(fSolidWorld,	// Its solid
+		worldMat,  							// Its material
+		"WorldLV"); 						// Its name
+
+	// World physical volume
+	fPhysWorld =
+		new G4PVPlacement(0,	// No rotation
+		G4ThreeVector(), 		// Placement (0,0,0)
+		fLogicWorld, 			// Its logical volume
+		"WorldPV", 				// Its name
+		0,						// Its mother volume
+		false, 					// No boolean operation
+		0, 						// Copy number
+		checkOverlaps);			// Overlaps checking
+}
+
+void NovoDetectorConstruction::ConstructPillar(G4int copyNumber)
+{
+	
+	// Get nist material manager
+	G4NistManager* nist = G4NistManager::Instance();
+	// Pillar dimensions
+	G4double pillarX = 1.0*cm;
+	G4double pillarY = 1.0*cm;
+	G4double pillarZ = 30.0*cm;
+
+	// Pillar material
+	G4Material* pillarMat = nist->FindOrBuildMaterial("G4_STILBENE");
+
+
+
+	fSolidPillar = 
+		new G4Box("PillarSV",
+        pillarX/2,
+		pillarY/2,
+		pillarZ/2);
+
+	fLogicPillar = 
+		new G4LogicalVolume(fSolidPillar,
+		pillarMat,
+		"PillarLV");
+
+	fPhysPillar = 
+		new G4PVPlacement(0,
+		G4ThreeVector(),
+		fLogicPillar,
+		"PillarPV",
+		fLogicWorld,
+		false,
+		copyNumber);
+}

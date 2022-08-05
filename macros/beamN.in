@@ -1,0 +1,36 @@
+
+/process/optical/defaults/scintillation/setByParticleType True
+/run/initialize
+
+# General particle source
+# gamma point source
+/gps/pos/type Point
+#Position of the source - x y z:
+/gps/pos/centre 0.0 1.0 0.0 cm
+/gps/particle gamma
+
+#Number of particles per event
+/gps/number 1
+#
+# the incident surface is in the y-z plane
+/gps/pos/rot1 0 1 0
+/gps/pos/rot2 0 0 1
+#
+# the beam is travelling along the x-axis without any angular
+#dispersion (angular despersion set to 0.0)
+/gps/ang/rot1 0 0 1
+/gps/ang/rot2 0 1 0
+/gps/ang/type iso
+/gps/ang/sigma_r 0. deg
+
+/gps/direction 0 -1 0
+#
+# the beam energy is in gaussian profile
+/gps/ene/type Gauss
+/gps/ene/mono 0.6617 MeV
+/gps/ene/sigma 0.0 eV
+
+/tracking/verbose 0
+
+#Start the run with the specified number of events:
+/run/beamOn 1000

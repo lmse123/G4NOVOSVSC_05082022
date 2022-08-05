@@ -1,0 +1,42 @@
+/*
+ * G4NovoSCSC: 
+ * Run action
+ * Header file
+ * Author: Kyrre Skjerdal (kyrre.skjerdal@hvl.no)
+ */
+
+
+/// \file NovoRunAction.hh
+/// \brief Definition of the NovoRunAction class
+
+#ifndef NovoRunAction_h
+#define NovoRunAction_h 1
+
+#include "G4UserRunAction.hh"
+#include "G4Accumulable.hh"
+#include "globals.hh"
+
+
+
+class G4Run;
+
+/// Run action class
+
+
+class NovoRunAction : public G4UserRunAction
+{
+  public:
+    NovoRunAction();
+    virtual ~NovoRunAction();
+
+    // virtual G4Run* GenerateRun();
+    virtual void BeginOfRunAction(const G4Run*);
+    virtual void   EndOfRunAction(const G4Run*);
+    
+    void AddNevScint(G4int n);
+  private:
+	G4Accumulable<G4int> fNevScint;
+   
+};
+
+#endif

@@ -1,0 +1,56 @@
+/*
+ * G4Rangeverifcation: 
+ * Defining the detector geometry, and experimental setup
+ * Header file
+ * Author: Kyrre Skjerdal (kyrre.skjerdal@hvl.no)
+ */
+ 
+
+/// \file RangeverificationDetectorConstruction.hh
+/// \brief Definition of the RangeverificationDetectorConstruction class
+
+#ifndef NovoDetectorConstruction_h
+#define NovoDetectorConstruction_h 1
+
+
+#include "G4VUserDetectorConstruction.hh"
+#include "globals.hh"
+
+
+
+class G4VPhysicalVolume;
+class G4LogicalVolume;
+class G4Box;
+
+class NovoDetectorConstruction : public G4VUserDetectorConstruction
+{
+	public:
+		NovoDetectorConstruction();
+		virtual ~NovoDetectorConstruction();
+  
+		// Function where the experimental setup is constructed
+		virtual G4VPhysicalVolume* Construct();
+  
+		// Get the physical volumes
+		G4VPhysicalVolume* GetWorld() const { return fPhysWorld; }
+	
+		// Get the logical volume of the scoring volume (water phantom)
+		G4LogicalVolume* GetScoringVolume() const { return fScoringVolume; }
+		
+		void ConstructWorld();
+		void ConstructPillar(G4int copyNumber = 0);
+  
+	protected:
+		G4LogicalVolume*  fScoringVolume;
+	private:
+		G4Box* fSolidWorld;
+		G4LogicalVolume* fLogicWorld;
+		G4VPhysicalVolume* fPhysWorld;
+  
+		G4Box* fSolidPillar;
+		G4LogicalVolume* fLogicPillar;
+		G4VPhysicalVolume* fPhysPillar;
+};
+
+#endif
+

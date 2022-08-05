@@ -1,0 +1,328 @@
+/// \file NovoDetectorConstruction.cc
+/// \brief Implementation of the NovoDetectorConstruction class
+//
+//
+
+
+#include "G4SDManager.hh"
+#include "G4RunManager.hh"
+
+#include "G4GeometryManager.hh"
+#include "G4SolidStore.hh"
+#include "G4LogicalVolumeStore.hh"
+#include "G4PhysicalVolumeStore.hh"
+#include "G4LogicalBorderSurface.hh"
+#include "G4LogicalSkinSurface.hh"
+
+#include "G4OpticalSurface.hh"
+#include "G4MaterialTable.hh"
+#include "G4VisAttributes.hh"
+#include "G4Material.hh"
+#include "G4Box.hh"
+#include "G4Tubs.hh"
+#include "G4Sphere.hh"
+#include "G4LogicalVolume.hh"
+#include "G4ThreeVector.hh"
+#include "G4PVPlacement.hh"
+#include "globals.hh"
+#include "G4UImanager.hh"
+#include "G4PhysicalConstants.hh"
+#include "G4SystemOfUnits.hh"
+#include "G4MaterialPropertiesTable.hh"
+#include "NovoDetectorConstruction.hh"
+//#include "NovoScintPillar.hh" 
+#include "NovoPhotocatSD.hh"
+#include "NovoScintSD.hh"
+
+
+
+
+NovoDetectorConstruction::NovoDetectorConstruction()
+: fVacuumMPT(NULL), fStilbeneMPT(NULL), fGlassMPT(NULL)/*, fScintPillar(NULL),fScintPillar2(NULL) */
+{
+  fWorldBox = NULL;
+  fWorldLog = NULL;
+  fWorldPhys = NULL;
+
+  fVacuum = fAir = fStilbene = fAl = fGlass = NULL;
+
+  fN = fO = fC = fH = NULL;
+
+  SetDefaults();
+
+  //fDetectorMessenger = new LXeDetectorMessenger(this);
+}
+
+
+NovoDetectorConstruction::~NovoDetectorConstruction() 
+{
+}
+
+void NovoDetectorConstruction::DefineMaterials(){
+	G4double a;  // atomic mass
+	G4double z;  // atomic number
+	G4double density;
+	
+	
+	//***Elements
+	fH = new G4Element("H", "H", z=1., a=1.01*g/mole);
+	fC = new G4Element("C", "C", z=6., a=12.01*g/mole);
+	fN = new G4Element("N", "N", z=7., a= 14.01*g/mole);
+	fO = new G4Element("O"  , "O", z=8., a= 16.00*g/mole);
+	
+	// Vacuum
+	fVacuum = new G4Material("Vacuum",z=1.,a=1.01*g/mole,
+                          density=universe_mean_density,kStateGas,0.1*kelvin,
+                          1.e-19*pascal);
+	
+	//Air
+	fAir = new G4Material("Air", density= 1.29*mg/cm3, 2);
+	fAir->AddElement(fN, 70*perCent);
+	fAir->AddElement(fO, 30*perCent);
+	
+	
+	G4double vacuumEnergy[]={2.0*eV,7.0*eV,7.14*eV};
+	const G4int vacuumNum = sizeof(vacuumEnergy)/sizeof(G4double);
+	G4double vacuumRIND[]={1.,1.,1.};
+	assert(sizeof(vacuumRIND) == sizeof(vacuumEnergy));
+	fVacuumMPT = new G4MaterialPropertiesTable();
+	fVacuumMPT->AddProperty("RINDEX", vacuumEnergy, vacuumRIND, vacuumNum);
+	fVacuum->SetMaterialPropertiesTable(fVacuumMPT); 
+	fAir->SetMaterialPropertiesTable(fVacuumMPT); // Give air the same MPT
+	
+
+	
+	//Stilbene
+	fStilbene = new G4Material("Stilbene", density=1.22*g/cm3, 2);
+	fStilbene->AddElement(fH, 12);
+	fStilbene->AddElement(fC, 14);
+	
+	//G4double scintEnergy[] = { 2.0*eV, 4.85*eV };
+	//G4double scintEnergy[] = { 2.0*eV, 3.18*eV };
+	
+	G4double scintEnergy[] = {3.10*eV, 3.18*eV, 3.31*eV}; //Energy
+	const G4int scintNum = sizeof(scintEnergy)/sizeof(G4double);
+	//~ G4double scintRIND[]  = { 1.757 , 1.757 };
+	//~ G4double scintRIND[]  = { 1.64 , 1.64 };
+	G4double scintRIND[]  = {1.64, 1.64 , 1.64 }; //Refraction index
+	assert(sizeof(scintRIND) == sizeof(scintEnergy));
+	//~ G4double scintABSL[]  = { 100.*cm, 100.*cm };
+	G4double scintABSL[]  = {100.*cm, 100.*cm, 100.*cm }; //Absorbtion length
+	
+	assert(sizeof(scintABSL) == sizeof(scintEnergy));
+	//~ G4double scintFAST[]  = {0.000008, 1.0};
+	//~ G4double scintFAST[]  = {0.23, 0.54, 0.23};
+	G4double scintFAST[]  = {0.0, 1.0, 0.0}; //Probability distribution
+	assert(sizeof(scintFAST) == sizeof(scintEnergy));
+	
+	G4double pEnergy[] = {0.1*MeV, 1.0*MeV, 100.0*MeV};
+	G4double pYIELD[] = {1400, 14000., 1400000.};
+	assert(sizeof(pYIELD) == sizeof(pEnergy));
+	const G4int pNum = sizeof(pEnergy)/sizeof(G4double);
+	
+
+	fStilbeneMPT = new G4MaterialPropertiesTable();
+	fStilbeneMPT->AddProperty("RINDEX", scintEnergy, scintRIND, scintNum);
+	fStilbeneMPT->AddProperty("ABSLENGTH", scintEnergy, scintABSL, scintNum);  
+	fStilbeneMPT->AddProperty("FASTCOMPONENT", scintEnergy, scintFAST, scintNum);  
+	
+	fStilbeneMPT->AddProperty("PROTONSCINTILLATIONYIELD", pEnergy, pYIELD, pNum);  
+	fStilbeneMPT->AddProperty("ELECTRONSCINTILLATIONYIELD", pEnergy, pYIELD, pNum);
+	fStilbeneMPT->AddProperty("IONSCINTILLATIONYIELD", pEnergy, pYIELD, pNum);
+	//~ fStilbeneMPT->AddConstProperty("SCINTILLATIONYIELD", 14000./MeV);
+	fStilbeneMPT->AddConstProperty("RESOLUTIONSCALE", 1.);
+	fStilbeneMPT->AddConstProperty("FASTTIMECONSTANT", 3.5*ns); // Decay time
+	fStilbeneMPT->AddConstProperty("YIELDRATIO", 1.0); // Proportion of scintillation light in fast component
+	
+	//fStilbeneMPT->AddConstProperty("RINDEX", 1.64);  
+	fStilbene->SetMaterialPropertiesTable(fStilbeneMPT);
+	
+	//Aluminum
+	fAl = new G4Material("Al",z=13.,a=26.98*g/mole,density=2.7*g/cm3);	
+	
+	//Silicon
+	fSilicon = new G4Material("Silicon", z=14, a=28.086*g/mole, density=2.329*g/cm3);
+	
+	//Glass
+	fGlass = new G4Material("Glass", density=1.032*g/cm3,2);
+	fGlass->AddElement(fC,91.533*perCent);
+	fGlass->AddElement(fH,8.467*perCent);
+	
+	G4double glassRIND[]={1.49,1.49,1.49};
+	assert(sizeof(scintRIND) == sizeof(scintEnergy));
+	G4double glassAbsLength[]={420.*cm,420.*cm,420.*cm};
+	assert(sizeof(glassAbsLength) == sizeof(scintEnergy));
+	fGlassMPT = new G4MaterialPropertiesTable();
+	fGlassMPT->AddProperty("ABSLENGTH",scintEnergy,glassAbsLength,scintNum);
+	fGlassMPT->AddProperty("RINDEX",scintEnergy,glassRIND,scintNum);
+	fGlass->SetMaterialPropertiesTable(fGlassMPT);
+}
+
+G4VPhysicalVolume* NovoDetectorConstruction::Construct()
+{
+	SetDefaults();
+	DefineMaterials();
+	return ConstructDetector();
+}
+
+G4VPhysicalVolume* NovoDetectorConstruction::ConstructDetector()
+{
+	G4double worldX = 1.0*m;
+	G4double worldY = 1.0*m;
+	G4double worldZ = 1.0*m;
+	
+	
+	fWorldBox = new G4Box("worldBox", worldX/2., worldY/2., worldZ/2.);
+	fWorldLog = new G4LogicalVolume(fWorldBox, fAir, "worldLog",0,0,0);
+	fWorldPhys = new G4PVPlacement(0,G4ThreeVector(),
+                              fWorldLog,"world",0,false,0);
+                              
+    fWorldLog->SetVisAttributes(G4VisAttributes::GetInvisible());
+    
+    //~ G4cout << "hallo hallo" << G4endl; 
+    /*
+    fScintPillar = new NovoScintPillar(0,G4ThreeVector(0. ,0. ,0.),
+                                             fWorldLog, false,0,
+                                             this);
+    fScintPillar2 = new NovoScintPillar(0,G4ThreeVector(1.0*cm, 0.0*cm, 0.0*cm),
+                                             fWorldLog, false,1,
+                                             this);    
+    */                
+    G4double xpos = -1.0*cm;
+    G4double ypos = -1.0*cm;
+    G4double zpos = 0.0*cm;
+	int copNo = 0;
+    for(auto i = 0; i < fNScintY; i++){
+		for(auto j = 0; j < fNScintX; j++){
+			fScintPillars.push_back(new NovoScintPillar(0, G4ThreeVector(xpos ,ypos ,zpos), fWorldLog, false, copNo, this));
+			xpos += 1.0*cm;
+			copNo++;
+		}
+		ypos += 1.0*cm;
+		xpos = -1.0*cm;
+	}                                                             
+    //Surface properties for the pillar
+    G4OpticalSurface* scintWrap = new G4OpticalSurface("ScintWrap");
+ 
+    
+ 
+  
+    // unified:
+    scintWrap->SetType(dielectric_dielectric);
+    scintWrap->SetModel(unified);
+    scintWrap->SetSigmaAlpha(12.0*degree);
+    scintWrap->SetFinish(groundbackpainted);
+    //~ scintWrap->SetFinish(groundteflonair);	
+    
+    // glisur:
+    //~ scintWrap->SetType(dielectric_dielectric);
+    //~ scintWrap->SetModel(glisur);
+    //~ scintWrap->SetSigmaAlpha(1.0);
+    //~ scintWrap->SetFinish(groundbackpainted);
+    
+    // LUT:
+    //~ scintWrap->SetType(dielectric_LUTDAVIS);
+	//~ scintWrap->SetModel(DAVIS);	
+	//~ scintWrap->SetFinish(RoughTeflon_LUT);
+	
+	
+	scintWrap->DumpInfo();
+
+    //G4double pp[] = {2.0*eV, 3.5*eV};
+    G4double pp[] = {1.84*eV, 2.00*eV, 4.08*eV, 4.85*eV};
+    const G4int num = sizeof(pp)/sizeof(G4double);
+    //G4double reflectivity[] = {1.0, 1.0};
+    G4double refl = 0.99;
+    G4double reflectivity[] = {refl, refl, refl, refl};
+    assert(sizeof(reflectivity) == sizeof(pp));
+    G4double efficiency[] = {0.0, 0.0, 0.0, 0.0};
+    assert(sizeof(efficiency) == sizeof(pp));
+    G4double speclobe[] = {1.0, 1.0, 1.0, 1.0};
+    assert(sizeof(speclobe) == sizeof(pp));
+    G4double specspike[] = {0.0, 0.0, 0.0, 0.0};
+    assert(sizeof(specspike) == sizeof(pp));
+    G4double backscatter[] = {0.0, 0.0, 0.0, 0.0};
+    assert(sizeof(backscatter) == sizeof(pp));
+    G4double rindex[] = {1.0, 1.0, 1.0, 1.0};
+    assert(sizeof(rindex) == sizeof(pp));
+    
+    
+    G4MaterialPropertiesTable* scintWrapProperty 
+      = new G4MaterialPropertiesTable();
+
+    scintWrapProperty->AddProperty("REFLECTIVITY",pp,reflectivity,num);
+    scintWrapProperty->AddProperty("EFFICIENCY",pp,efficiency,num);
+    scintWrapProperty->AddProperty("SPECULARLOBECONSTANT",pp,speclobe,num);
+    scintWrapProperty->AddProperty("SPECULARSPIKECONSTANT",pp,specspike,num);
+    scintWrapProperty->AddProperty("BACKSCATTERCONSTANT",pp,backscatter,num);
+    scintWrapProperty->AddProperty("RINDEX",pp,rindex,num);
+    scintWrap->SetMaterialPropertiesTable(scintWrapProperty);
+	
+	for(auto i = 0; i < fNScint; i++){
+		new G4LogicalBorderSurface("ScintWrap", fScintPillars[i],
+								fWorldPhys,
+								scintWrap);
+	}
+    //new G4LogicalSkinSurface("ScintWrap", fScintPillar->GetLogScint(), scintWrap);
+    return fWorldPhys;
+}
+
+void NovoDetectorConstruction::ConstructSDandField()
+{
+	
+	for(auto i = 0; i < fNScint; i++){
+		if(!fScintPillars[i]) return;
+		if (!fPhotcat_SD.Get()) {
+			//Created here so it exists as pmts are being placed
+			G4cout << "Construction pcSD" << G4endl;
+			NovoPhotocatSD* pc_SD = new NovoPhotocatSD("pcSD");
+			fPhotcat_SD.Put(pc_SD);
+
+			pc_SD->InitPhotocathodes(2); //let pcSD know # of photocathodes
+			pc_SD->SetPCPositions(fScintPillars[i]->GetAbsPhotcatPositions());
+			G4cout << "DetConst: " << fScintPillars[i]->GetAbsPhotcatPositions()[0] << G4endl;
+			G4cout << "DetConst: " << fScintPillars[i]->GetAbsPhotcatPositions()[1] << G4endl;
+		}
+		G4SDManager::GetSDMpointer()->AddNewDetector(fPhotcat_SD.Get());
+		//sensitive detector is not actually on the photocathode.
+		//processHits gets done manually by the stepping action.
+		//It is used to detect when photons hit and get absorbed&detected at the
+		//boundary to the photocathode (which doesnt get done by attaching it to a
+		//logical volume.
+		//It does however need to be attached to something or else it doesnt get
+		//reset at the begining of events
+
+		SetSensitiveDetector(fScintPillars[i]->GetLogPhotocat(), fPhotcat_SD.Get());
+	
+	
+		// Scint SD
+
+		if (!fScint_SD.Get()) {
+			G4cout << "Construction scintSD" << G4endl;
+			NovoScintSD* scint_SD = new NovoScintSD("scintSD");
+			fScint_SD.Put(scint_SD);
+		}
+		G4SDManager::GetSDMpointer()->AddNewDetector(fScint_SD.Get());
+		SetSensitiveDetector(fScintPillars[i]->GetLogScint(), fScint_SD.Get());
+	}
+
+}
+
+void NovoDetectorConstruction::SetDimensions(G4ThreeVector dims) {
+	this->fScint_x=dims[0];
+	this->fScint_y=dims[1];
+	this->fScint_z=dims[2];
+	G4RunManager::GetRunManager()->ReinitializeGeometry();
+}
+
+void NovoDetectorConstruction::SetDefaults() {
+
+	//Resets to default values
+	fNScintX = 3;
+	fNScintY = 3;
+	fNScint = fNScintX*fNScintY;
+
+	fScint_x = 1.0*cm;
+	fScint_y = 1.0*cm;
+	fScint_z = 20.0*cm;
+}

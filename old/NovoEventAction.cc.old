@@ -1,0 +1,462 @@
+/* 
+ * G4NovoSVSC: 
+ * Event action
+ * Source file
+ * Author: Kyrre Skjerdal (kyrre.skjerdal@hvl.no)
+ */
+ 
+
+/// \file NovoEventAction.cc
+/// \brief Implementation of the NovoEventAction class
+
+
+#include "NovoEventAction.hh"
+#include "NovoRunAction.hh"
+#include "NovoAnalysis.hh"
+#include "NovoScintHit.hh"
+#include "NovoPhotocatHit.hh"
+#include "NovoUserEventInformation.hh"
+
+#include "G4RunManager.hh"
+#include "G4HCofThisEvent.hh"
+#include "G4UnitsTable.hh"
+#include "G4VAnalysisManager.hh"
+
+#include "G4EventManager.hh"
+#include "G4SDManager.hh"
+#include "G4RunManager.hh"
+#include "G4Event.hh"
+#include "G4EventManager.hh"
+#include "G4VVisManager.hh"
+#include "G4ios.hh"
+#include "G4UImanager.hh"
+#include "G4SystemOfUnits.hh"
+#include "G4DataVector.hh"
+
+#include <algorithm>
+
+NovoEventAction::NovoEventAction(NovoRunAction* runAction, NovoDetectorConstruction* det)
+:	G4UserEventAction(),
+	fEventID(0),
+	fScintCollID(-1),
+	fPCCollID(-1),
+	fVerbose(1),
+	fForcedrawphotons(false),
+	fForcenophotons(false),
+	fDetector(det),
+	fRunAction(runAction)
+{
+}
+
+
+NovoEventAction::~NovoEventAction()
+{
+}
+
+void NovoEventAction::BeginOfEventAction(const G4Event* anEvent)
+{
+	G4EventManager::
+    GetEventManager()->SetUserInformation(new NovoUserEventInformation);
+
+	G4SDManager* SDman = G4SDManager::GetSDMpointer();
+	if(fScintCollID<0){
+		fScintCollID=SDman->GetCollectionID("scintCollection");
+	}
+	if(fPCCollID<0){
+		fPCCollID=SDman->GetCollectionID("photocatHitCollection");
+	}
+	G4int evNum = anEvent->GetEventID();
+	//G4cout << "Event number: " << evNum << G4endl;
+	if(evNum < 100){
+		G4cout << "Event number: " << evNum << G4endl;
+	} else if (evNum < 1000 && evNum%100 == 0){
+		G4cout << "Event number: " << evNum << G4endl;
+	} else if (evNum < 10000 && evNum%1000 == 0){	
+		G4cout << "Event number: " << evNum << G4endl;
+	} else if(evNum%10000 == 0){
+		G4cout << "Event number: " << evNum << G4endl;
+	}
+
+}
+
+void NovoEventAction::EndOfEventAction(const G4Event* anEvent)
+{
+	NovoUserEventInformation* eventInformation = (NovoUserEventInformation*)anEvent->GetUserInformation();
+	
+	NovoScintHitsCollection* scintHC = 0;
+	NovoPhotocatHitsCollection* pcHC = 0;
+	G4HCofThisEvent* hitsCE = anEvent->GetHCofThisEvent();
+	auto analysisManager = G4AnalysisManager::Instance();
+	
+	if(hitsCE){
+		if(fScintCollID >= 0){
+			scintHC = (NovoScintHitsCollection*)(hitsCE->GetHC(fScintCollID));
+		}
+		if(fPCCollID >=0 ){
+			pcHC = (NovoPhotocatHitsCollection*)(hitsCE->GetHC(fPCCollID));
+		}
+	}
+	
+	if(scintHC){
+		int n_hit = scintHC->entries();
+		G4ThreeVector  eWeightPos(0.);
+		G4double edep;
+		G4double edepMax=0;
+
+		for(int i=0;i<n_hit;i++){ //gather info on hits in scintillator
+			edep=(*scintHC)[i]->GetEdep();
+			eventInformation->IncEDep(edep); //sum up the edep
+			eWeightPos += (*scintHC)[i]->GetPos()*edep;//calculate energy weighted pos
+			if(edep>edepMax){
+				edepMax=edep;//store max energy deposit
+				G4ThreeVector posMax=(*scintHC)[i]->GetPos();
+				eventInformation->SetPosMax(posMax,edep);
+			}
+		}
+		if(eventInformation->GetEDep()==0.){
+			if(fVerbose>0)G4cout<<"No hits in the scintillator this event."<<G4endl;
+		}
+		else{
+			//Finish calculation of energy weighted position
+			eWeightPos/=eventInformation->GetEDep();
+			eventInformation->SetEWeightPos(eWeightPos);
+			if(fVerbose>0){
+				G4cout << "\tEnergy weighted position of hits in Scintillator : " << eWeightPos/mm << G4endl;
+				G4cout << "\tTotal energy deposition in scintillator : " << eventInformation->GetEDep() / MeV << " (MeV)" << G4endl;
+			}
+			analysisManager->FillH1(11, eventInformation->GetEDep());
+			analysisManager->FillNtupleDColumn(1, 16, eventInformation->GetEDep());	
+		}
+		
+	}
+	//G4cout << "scintHC finished" << G4endl;
+	G4double avgtime1 = 0.;
+	G4double avgtime2 = 0.;
+	G4ThreeVector pc0pos = {0., 0., 0.};
+	G4ThreeVector pc1pos = {0., 0., 0.};
+	G4int pc0photoncount = 0;
+	G4int pc1photoncount = 0;
+	G4double timediff = 0.;
+	G4double timediff5th = 0.;
+	G4double timediff1st = 0.;
+	G4double timeratio = 0.;
+	G4double yieldratio = 0.;
+	G4double yieldratio2 = 0.;
+	G4double sumPhotonE1 = 0.;
+	G4double sumPhotonE2 = 0.;
+	G4double photonEdep1 = 0.;
+	G4double photonEdep2 = 0.;
+	if(pcHC){
+		//G4cout << "pcHC" << pcHC->entries() << G4endl;
+		G4ThreeVector reconPos(0.,0.,0.);
+		G4ThreeVector reconPosTime(0., 0., 0.);
+		G4int pcs=pcHC->entries();
+		G4cout << "N PCs: " << pcs << G4endl;
+		//Gather info from all PMTs
+		if(pcs > 0){
+			fRunAction->AddNevScint(1);
+			
+	
+			G4DataVector timestamps1;
+			G4DataVector timestamps2;
+			G4DataVector photonE1;
+			G4DataVector photonE2;
+			if ((*pcHC)[0]->GetPhotocatPos().z() < 0 ){
+				timestamps1 = (*pcHC)[0]->GetTimestamps();
+				timestamps2 = (*pcHC)[1]->GetTimestamps();
+				photonE1 = (*pcHC)[0]->GetPhotonE();
+				photonE2 = (*pcHC)[1]->GetPhotonE();
+			} else {
+				timestamps2 = (*pcHC)[0]->GetTimestamps();
+				timestamps1 = (*pcHC)[1]->GetTimestamps();
+				photonE1 = (*pcHC)[1]->GetPhotonE();
+				photonE2 = (*pcHC)[0]->GetPhotonE();
+			}
+			
+			
+			for(uint i = 0; i < photonE1.size(); i++){
+				sumPhotonE1 += photonE1[i];
+			}
+			for(uint i = 0; i < photonE2.size(); i++){
+				sumPhotonE2 += photonE2[i];
+			}
+			
+			G4double sum1 = 0.;
+			G4double sum2 = 0.;
+			sort(timestamps1.begin(), timestamps1.end());
+			sort(timestamps2.begin(), timestamps2.end());
+			analysisManager->FillNtupleDColumn(1, 0, timestamps1[4]);
+			analysisManager->FillNtupleDColumn(1, 1, timestamps2[4]);
+			analysisManager->FillNtupleDColumn(1, 12, timestamps1[0]);
+			analysisManager->FillNtupleDColumn(1, 13, timestamps2[0]);
+			analysisManager->FillH1(10, timestamps1[0] + timestamps2[0]);
+			for(uint i = 0; i < timestamps1.size(); i++){	
+				//~ if(i < 20) G4cout << timestamps1[i] << G4endl;			
+				analysisManager->FillH1(1, timestamps1[i]);
+				//~ analysisManager->FillNtupleDColumn(1, 0, timestamps1[i]);
+				sum1 +=timestamps1[i];
+			}
+			//~ G4cout << G4endl;
+			for(uint i = 0; i < timestamps2.size(); i++){
+				//~ if(i < 20) G4cout << timestamps2[i] << G4endl;
+				analysisManager->FillH1(2, timestamps2[i]);
+				//~ analysisManager->FillNtupleDColumn(1, 1, timestamps2[i]);
+				sum2 +=timestamps2[i];
+			}
+			avgtime1 = sum1/(G4double)timestamps1.size();
+			avgtime2 = sum2/(G4double)timestamps2.size();
+			timediff = avgtime1 - avgtime2;
+			timeratio = avgtime1/avgtime2;
+			timediff5th = timestamps1[4] - timestamps2[4];
+			timediff1st = timestamps1[0] - timestamps2[0];
+			
+			analysisManager->FillH1(4, avgtime1);
+			analysisManager->FillH1(5, avgtime2);
+			analysisManager->FillNtupleDColumn(1, 2, avgtime1);
+			analysisManager->FillNtupleDColumn(1, 3, avgtime2);
+			if ((*pcHC)[0]->GetPhotocatPos().z() < 0 ){
+				//~ analysisManager->FillH1(4, avgtime1);
+				//~ analysisManager->FillH1(5, avgtime2);
+				//~ analysisManager->FillNtupleDColumn(1, 2, avgtime1);
+				//~ analysisManager->FillNtupleDColumn(1, 3, avgtime2);
+				//if((*pcHC)[0]->GetPhotonCount() > 0 && (*pcHC)[1]->GetPhotonCount() > 0){
+					analysisManager->FillH1(6, (*pcHC)[0]->GetPhotonCount() );
+					analysisManager->FillH1(7, (*pcHC)[1]->GetPhotonCount() );
+					analysisManager->FillNtupleDColumn(1, 4, (*pcHC)[0]->GetPhotonCount());
+					analysisManager->FillNtupleDColumn(1, 5, (*pcHC)[1]->GetPhotonCount());
+					photonEdep1 = (*pcHC)[0]->GetEdep();
+					photonEdep2 = (*pcHC)[1]->GetEdep();
+					analysisManager->FillNtupleDColumn(1, 17, photonEdep1);
+					analysisManager->FillNtupleDColumn(1, 18, photonEdep2);
+					yieldratio = (G4double)(*pcHC)[0]->GetPhotonCount()/(*pcHC)[1]->GetPhotonCount();
+					yieldratio2 = (G4double)(*pcHC)[1]->GetPhotonCount()/((*pcHC)[1]->GetPhotonCount() + (G4double)(*pcHC)[0]->GetPhotonCount());
+				//}
+			} else if ((*pcHC)[0]->GetPhotocatPos().z() > 0 ){
+				//~ analysisManager->FillH1(4, avgtime2);
+				//~ analysisManager->FillH1(5, avgtime1);
+				//~ analysisManager->FillNtupleDColumn(1, 2, avgtime2);
+				//~ analysisManager->FillNtupleDColumn(1, 3, avgtime1);
+				//if((*pcHC)[0]->GetPhotonCount() > 0 && (*pcHC)[1]->GetPhotonCount() > 0){
+					analysisManager->FillH1(6, c );
+					analysisManager->FillH1(7, (*pcHC)[0]->GetPhotonCount() );
+					analysisManager->FillNtupleDColumn(1, 4, (*pcHC)[1]->GetPhotonCount());
+					analysisManager->FillNtupleDColumn(1, 5, (*pcHC)[0]->GetPhotonCount());
+					photonEdep1 = (*pcHC)[1]->GetEdep();
+					photonEdep2 = (*pcHC)[0]->GetEdep();
+					analysisManager->FillNtupleDColumn(1, 17, photonEdep1);
+					analysisManager->FillNtupleDColumn(1, 18, photonEdep2);
+					yieldratio = (G4double)(*pcHC)[1]->GetPhotonCount()/(*pcHC)[0]->GetPhotonCount();
+					yieldratio2 = (G4double)(*pcHC)[0]->GetPhotonCount()/((*pcHC)[1]->GetPhotonCount() + (G4double)(*pcHC)[0]->GetPhotonCount());
+				//}
+			}
+		
+			for(G4int i=0;i<pcs;i++){
+				eventInformation->IncHitCount((*pcHC)[i]->GetPhotonCount());
+				reconPos+=(*pcHC)[i]->GetPhotocatPos()*(*pcHC)[i]->GetPhotonCount();
+				
+				if((*pcHC)[i]->GetPhotocatPos().z() < 0){
+				
+					reconPosTime+=(*pcHC)[i]->GetPhotocatPos()*(*pcHC)[i]->GetPhotonCount()/avgtime1;
+				}
+				else {
+					reconPosTime+=(*pcHC)[i]->GetPhotocatPos()*(*pcHC)[i]->GetPhotonCount()/avgtime2;
+				}
+				
+				//~ if((*pmtHC)[i]->GetPhotonCount()>=fPMTThreshold){
+					//~ eventInformation->IncPMTSAboveThreshold();
+				//~ }
+				//~ else{//wasnt above the threshold, turn it back off
+					//~ (*pmtHC)[i]->SetDrawit(false);
+				//~ }
+			}
+ 
+			pc0pos = (*pcHC)[0]->GetPhotocatPos();
+			pc1pos = (*pcHC)[1]->GetPhotocatPos();
+			//~ G4cout << "Photocat 0 pos:" << pc0pos << G4endl;
+			//~ G4cout << "Photocat 1 pos:" << pc1pos << G4endl;
+			pc0photoncount = (*pcHC)[0]->GetPhotonCount();
+			pc1photoncount = (*pcHC)[1]->GetPhotonCount();
+			
+			G4ThreeVector correctedRecPos(0., 0., 0.); 
+			G4ThreeVector correctedRecPosSigmoid(0., 0., 0.); 
+			G4ThreeVector correctedRecPosTime(0., 0., 0.); 
+			G4ThreeVector correctedRecPosTimeSigmoid(0., 0., 0.); 
+			if(eventInformation->GetHitCount()>0){//dont bother unless there were hits
+				reconPos/=eventInformation->GetHitCount();
+				//correctedRecPos = CalculatePosition(reconPos);
+				//correctedRecPosSigmoid = CalculatePositionSigmoid(reconPos);
+				G4double photontimesum = 0.0;
+				if((*pcHC)[0]->GetPhotocatPos().z() < 0 ){
+					photontimesum = (*pcHC)[0]->GetPhotonCount()/avgtime1 + (*pcHC)[1]->GetPhotonCount()/avgtime2;
+				} else {
+					photontimesum = (*pcHC)[0]->GetPhotonCount()/avgtime2 + (*pcHC)[1]->GetPhotonCount()/avgtime1;
+				}
+				reconPosTime/=photontimesum;
+				//correctedRecPosTime = CalculatePositionTime(reconPosTime);
+				//correctedRecPosTimeSigmoid = CalculatePositionTimeSigmoid(reconPosTime);
+				
+				if(fVerbose>0){
+					G4cout << "\tReconstructed position of hits in photocathode : "
+					<< reconPos/mm << G4endl;
+					G4cout << "\tCorrected reconstructed position of hits in photocathode : "
+					<< correctedRecPos/mm << G4endl;
+					G4cout << "\tCorrected reconstructed position of hits in photocathode (Sigmoid): "
+					<< correctedRecPosSigmoid/mm << G4endl;
+					G4cout << "\tReconstructed position of hits in photocathode with timing : "
+					<< reconPosTime/mm << G4endl;
+					G4cout << "\tCorrected reconstructed position of hits in photocathode with timing: "
+					<< correctedRecPosTime/mm << G4endl;
+					G4cout << "\tCorrected reconstructed position of hits in photocathode with timing (Sigmoid): "
+					<< correctedRecPosTimeSigmoid/mm << G4endl;
+					G4cout << "\tPhoton energy deposited in PC1 (vector): " << sumPhotonE1/MeV << G4endl;
+					G4cout << "\tPhoton energy deposited in PC2 (vector): " << sumPhotonE2/MeV << G4endl;
+					G4cout << "\tPhoton energy deposited in PC1: " << photonEdep1/MeV << G4endl;
+					G4cout << "\tPhoton energy deposited in PC2: " << photonEdep2/MeV << G4endl;
+				}
+				eventInformation->SetReconPos(reconPos);
+				analysisManager->FillH1(3, reconPos.z());
+				analysisManager->FillH1(8, correctedRecPos.z());
+				analysisManager->FillH1(9, reconPosTime.z());
+		
+				analysisManager->FillNtupleDColumn(1, 6, reconPos.z());
+				//analysisManager->FillNtupleDColumn(1, 7, correctedRecPos.z());
+				//analysisManager->FillNtupleDColumn(1, 8, correctedRecPosSigmoid.z());
+				analysisManager->FillNtupleDColumn(1, 7, reconPosTime.z());
+				//analysisManager->FillNtupleDColumn(1, 10, correctedRecPosTime.z());
+				//analysisManager->FillNtupleDColumn(1, 11, correctedRecPosTimeSigmoid.z());
+				analysisManager->FillNtupleDColumn(1, 8, timediff);
+				analysisManager->FillNtupleDColumn(1, 9, timeratio);
+				analysisManager->FillNtupleDColumn(1, 10, yieldratio);
+				analysisManager->FillNtupleDColumn(1, 11, yieldratio2);
+				analysisManager->FillNtupleDColumn(1, 14, timediff5th);
+				analysisManager->FillNtupleDColumn(1, 15, timediff1st);
+			}
+			pcHC->DrawAllHits();
+		} else {
+			G4cout << "No hits in PCs in this event." << G4endl;
+		}
+		
+	}	
+	analysisManager->AddNtupleRow(1);
+	if(fVerbose>0){
+		G4cout << "\tPhotocathode 1 position : " << pc0pos << G4endl;
+		G4cout << "\tPhotocathode 2 position : " << pc1pos << G4endl;
+		G4cout << "\tPhoton count in photocatode 1: " << pc0photoncount << G4endl;
+		G4cout << "\tPhoton count in photocatode 2: " << pc1photoncount<< G4endl;
+		//End of event output. later to be controlled by a verbose level
+		G4cout << "\tNumber of photons that hit PCs in this event : "
+			<< eventInformation->GetHitCount() << G4endl;
+		//~ G4cout << "\tNumber of PMTs above threshold("<<fPMTThreshold<<") : "
+			//~ << eventInformation->GetPMTSAboveThreshold() << G4endl;
+		G4cout << "\tNumber of photons produced by scintillation in this event : "
+			<< eventInformation->GetPhotonCount_Scint() << G4endl;
+		G4cout << "\tNumber of photons produced by cerenkov in this event : "
+			<< eventInformation->GetPhotonCount_Ceren() << G4endl;
+		G4cout << "\tNumber of photons absorbed (OpAbsorption) in this event : "
+			<< eventInformation->GetAbsorptionCount() << G4endl;
+		G4cout << "\tNumber of photons absorbed at boundaries (OpBoundary) in "
+			<< "this event : " << eventInformation->GetBoundaryAbsorptionCount()
+			<< G4endl;
+		G4cout << "\tUnaccounted for photons in this event : "
+			<< (eventInformation->GetPhotonCount_Scint() +
+				eventInformation->GetPhotonCount_Ceren() -
+				eventInformation->GetAbsorptionCount() -
+				eventInformation->GetHitCount() -
+				eventInformation->GetBoundaryAbsorptionCount())
+			<< G4endl;
+		G4cout << "\tMean time negative side: " << avgtime1/ns << G4endl;
+		G4cout << "\tMean time positive side: " << avgtime2/ns << G4endl;
+		G4cout << "\tTime difference: " << timediff/ns << G4endl;
+		G4cout << "\tTime ratio: " << timeratio << G4endl;
+		G4cout << "\tYield ratio: " << yieldratio << G4endl;
+		
+	}
+}
+
+
+G4ThreeVector NovoEventAction::CalculatePosition(G4ThreeVector vec)
+{
+	G4ThreeVector pos(0., 0., 0.);
+	if (fDetector->GetScintZ() == 30.0*cm){
+		G4double p0 = 1.02500e-02;
+		G4double p1 = 3.38410e+00;
+		pos.setX(vec.x());
+		pos.setY(vec.y());
+		pos.setZ(p0 + vec.z()*p1);
+	}
+	if (fDetector->GetScintZ() == 20.0*cm){
+		G4double p0 = -6.18240e-02;
+		G4double p1 = 7.26294e+00;
+		pos.setX(vec.x());
+		pos.setY(vec.y());
+		pos.setZ(p0 + vec.z()*p1);
+	}
+	return pos;
+}
+
+G4ThreeVector NovoEventAction::CalculatePositionSigmoid(G4ThreeVector vec)
+{
+	G4ThreeVector pos(0., 0., 0.);
+	//~ G4cout << "fDetector->GetScintZ(): " << fDetector->GetScintZ()/cm << G4endl;
+	if (fDetector->GetScintZ() == 30.0*cm){
+		G4double p0 = 4.53401e+00;
+		G4double p1 = 1.01916e-02;
+		G4double z = (p0*vec.z())/(1+std::abs(p1*vec.z()));
+		pos.setX(vec.x());
+		pos.setY(vec.y());
+		pos.setZ(z);
+	}
+	if (fDetector->GetScintZ() == 20.0*cm){
+		G4double p0 = 1.36367e+01;
+		G4double p1 = -8.50906e-02;
+		G4double z = (p0*vec.z())/(1+std::abs(p1*vec.z()));
+		pos.setX(vec.x());
+		pos.setY(vec.y());
+		pos.setZ(z);
+	}
+	return pos;
+}
+
+G4ThreeVector NovoEventAction::CalculatePositionTime(G4ThreeVector vec)
+{
+	G4ThreeVector pos(0., 0., 0.);
+	if (fDetector->GetScintZ() == 30.0*cm){
+		G4double p0 = -1.21310e-02;
+		G4double p1 = 2.31182e+00;
+		pos.setX(vec.x());
+		pos.setY(vec.y());
+		pos.setZ(p0 + vec.z()*p1);
+	}
+	if (fDetector->GetScintZ() == 20.0*cm){
+		G4double p0 = 6.45101e-02;	
+		G4double p1 = 4.68424e+00;
+		pos.setX(vec.x());
+		pos.setY(vec.y());
+		pos.setZ(p0 + vec.z()*p1);
+	}
+	return pos;
+}
+
+G4ThreeVector NovoEventAction::CalculatePositionTimeSigmoid(G4ThreeVector vec)
+{
+	G4ThreeVector pos(0., 0., 0.);
+	//~ G4cout << "fDetector->GetScintZ(): " << fDetector->GetScintZ()/cm << G4endl;
+	if (fDetector->GetScintZ() == 30.0*cm){
+		G4double p0 = 2.89218e+00;
+		G4double p1 = 5.09484e-03;
+		G4double z = (p0*vec.z())/(1+std::abs(p1*vec.z()));
+		pos.setX(vec.x());
+		pos.setY(vec.y());
+		pos.setZ(z);
+	}
+	if (fDetector->GetScintZ() == 20.0*cm){
+		G4double p0 = 7.97598e+00;
+		G4double p1 = 4.41081e-02;
+		G4double z = (p0*vec.z())/(1+std::abs(p1*vec.z()));
+		pos.setX(vec.x());
+		pos.setY(vec.y());
+		pos.setZ(z);
+	}
+	return pos;
+}
+

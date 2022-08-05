@@ -1,0 +1,73 @@
+/// \file NovoScintHit.hh
+/// \brief Definition of the NovoScintHit class
+
+
+#ifndef NovoScintHit_h
+#define NovoScintHit_h 1
+
+#include "G4VHit.hh"
+#include "G4THitsCollection.hh"
+#include "G4Allocator.hh"
+#include "G4ThreeVector.hh"
+#include "G4LogicalVolume.hh"
+#include "G4Transform3D.hh"
+#include "G4RotationMatrix.hh"
+#include "G4VPhysicalVolume.hh"
+
+
+#include "tls.hh"
+
+class NovoScintHit : public G4VHit
+{
+	public:
+		NovoScintHit();
+		NovoScintHit(G4VPhysicalVolume* pVol);
+		virtual ~NovoScintHit();
+		NovoScintHit(const NovoScintHit &right);
+		const NovoScintHit& operator=(const NovoScintHit &right);
+		G4int operator==(const NovoScintHit &right) const;
+
+		inline void *operator new(size_t);
+		inline void operator delete(void *aHit);
+ 
+		virtual void Draw();
+		virtual void Print();
+
+		inline void SetEdep(G4double de) { fEdep = de; }
+		inline void AddEdep(G4double de) { fEdep += de; }
+		
+		inline G4double GetEdep() const { return fEdep; }
+
+		inline void SetTime(G4double t) { fTime = t; }
+		inline G4double GetTime() const { return fTime; }
+	
+		inline void SetPos(G4ThreeVector xyz) { fPos = xyz; }
+		inline G4ThreeVector GetPos() const { return fPos; }
+
+		inline const G4VPhysicalVolume * GetPhysV() { return fPhysVol; }
+
+	private:
+		G4double fEdep;
+		G4double fTime;
+		G4ThreeVector fPos;
+		const G4VPhysicalVolume* fPhysVol;
+};
+
+typedef G4THitsCollection<NovoScintHit> NovoScintHitsCollection;
+
+extern G4ThreadLocal G4Allocator<NovoScintHit>* NovoScintHitAllocator;
+
+inline void* NovoScintHit::operator new(size_t)
+{
+  if(!NovoScintHitAllocator)
+      NovoScintHitAllocator = new G4Allocator<NovoScintHit>;
+  return (void *) NovoScintHitAllocator->MallocSingle();
+}
+
+inline void NovoScintHit::operator delete(void *aHit)
+{
+  LXeScintHitAllocator->FreeSingle((NovoScintHit*) aHit);
+}
+
+
+#endif

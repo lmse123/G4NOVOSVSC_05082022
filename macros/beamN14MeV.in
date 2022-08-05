@@ -1,0 +1,32 @@
+
+/process/optical/defaults/scintillation/setByParticleType True # what does this do?
+/run/initialize
+# Source
+/gps/pos/type Point
+/gps/pos/centre 6.0 0.0 0.0 mm #dist+5mm on detector surface, between detector and bar. OBS! dist+5mm, 
+/gps/particle gamma
+/gps/number 1 # number of particles per event
+
+
+# the incident surface is in the y-z plane
+/gps/pos/rot1 0 1 0 # 1st vector defining the rotation matrix
+/gps/pos/rot2 0 0 1 # 2nd vector defining the rotation matrix
+
+# the beam is travelling along the x-axis without any angular dispersion (angular despersion set to 0.0)
+/gps/ang/rot1 0 0 1
+/gps/ang/rot2 0 1 0
+#/gps/ang/type iso
+#/gps/ang/sigma_r 0. deg
+
+/gps/direction -1 0 0
+
+# the beam energy is in gaussian profile (what does that mean?)
+/gps/ene/type Gauss
+/gps/ene/mono 0.6617 MeV
+/gps/ene/sigma 0.0 eV #??
+
+/tracking/verbose 0
+
+#Start the run with the specified number of events:
+/run/beamOn 1000000 #10^8
+ 

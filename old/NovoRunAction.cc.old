@@ -1,0 +1,143 @@
+/*
+ * G4NovoSVSC: 
+ * Run action
+ * Source file
+ * Author: Kyrre Skjerdal (kyrre.skjerdal@hvl.no)
+ */
+
+
+/// \file NovoRunAction.cc
+/// \brief Implementation of the NovoRunAction class
+
+#include "NovoRunAction.hh"
+#include "NovoPrimaryGeneratorAction.hh"
+#include "NovoAnalysis.hh"
+
+#include "G4RunManager.hh"
+#include "G4Run.hh"
+#include "G4AccumulableManager.hh"
+#include "G4LogicalVolumeStore.hh"
+#include "G4LogicalVolume.hh"
+#include "G4UnitsTable.hh"
+#include "G4SystemOfUnits.hh"
+
+
+NovoRunAction::NovoRunAction()
+:	G4UserRunAction(),
+	fNevScint(0)
+{
+	//auto analysisManager = G4AnalysisManager::Instance();
+	// Create analysis manager
+	// The choice of analysis technology is done via selectin of a namespace
+	// in NovoAnalysis.hh
+	auto analysisManager = G4AnalysisManager::Instance();
+	G4cout << "Using " << analysisManager->GetType() << G4endl;
+	
+	// Create directories 
+	analysisManager->SetHistoDirectoryName("histograms");
+	analysisManager->SetNtupleDirectoryName("ntuples");
+	analysisManager->SetVerboseLevel(1);
+	
+	// Create histograms
+	analysisManager->CreateH1("nReflectionsHitPC", "Number of reflections", 400, 0, 400, "none", "n refl"); // H1: 0
+	analysisManager->CreateH1("Timestamps1", "Timestamps of hits 1", 5000, 0.0*ns, 500.0*ns, "ns", "time"); // H1: 1
+	analysisManager->CreateH1("Timestamps2", "Timestamps of hits 2", 5000, 0.0*ns, 500.0*ns, "ns", "time"); // H1: 2
+	analysisManager->CreateH1("ReconPos", "Reconstructed position", 300, -150*mm, 150*mm, "mm", "pos"); // H1: 3
+	analysisManager->CreateH1("AvgTime1", "Avg times for PC 1", 50, 0.0*ns, 100.0*ns, "ns", "time"); // H1: 4
+	analysisManager->CreateH1("AvgTime2", "Avg times for PC 2", 50, 0.0*ns, 100.0*ns, "ns", "time"); // H1: 5
+	analysisManager->CreateH1("PhotonCount1", "Photon count for PC 1", 2500, 0.0, 5000.0, "none", "n photon"); // H1: 6
+	analysisManager->CreateH1("PhotonCount2", "Photon count for PC 2", 2500, 0.0, 5000.0, "none", "n photon"); // H1: 7
+	analysisManager->CreateH1("CorrReconPos", "Corrected reconstructed position", 500, -250*mm, 250*mm, "mm", "pos"); // H1: 8
+	analysisManager->CreateH1("ReconPosTime", "Reconstructed position", 300, -150*mm, 150*mm, "mm", "pos"); // H1: 9
+	analysisManager->CreateH1("TimestampSum", "Sum time first photon", 100, 0.0*ns, 10.0*ns, "ns", "time"); // H1: 10
+	analysisManager->CreateH1("EDep", "Energy deposited in scintilator", 100, 0.0*MeV, 5.0*MeV, "MeV", "E"); // H1: 11
+	
+	analysisManager->SetFirstNtupleId(1);
+	analysisManager->CreateNtuple("EventInfo", "Event info"); 
+	analysisManager->CreateNtupleDColumn("FifthTimestamp1"); // Nt1: 0
+	analysisManager->CreateNtupleDColumn("FifthTimestamp2"); // Nt1: 1
+	analysisManager->CreateNtupleDColumn("AvgTime1"); // Nt1: 2
+	analysisManager->CreateNtupleDColumn("AvgTime2"); // Nt1: 3
+	analysisManager->CreateNtupleDColumn("PhotonCount1"); // Nt1: 4
+	analysisManager->CreateNtupleDColumn("PhotonCount2"); // Nt1: 5
+	analysisManager->CreateNtupleDColumn("RecPosUncorr"); // Nt1: 6
+	//analysisManager->CreateNtupleDColumn("RecPosCorr"); // Nt1: 7
+	//analysisManager->CreateNtupleDColumn("RecPosCorrSigmoid"); // Nt1: 8
+	analysisManager->CreateNtupleDColumn("RecPosTimeUncorr"); // Nt1: 7
+	//analysisManager->CreateNtupleDColumn("RecPosTimeCorr"); // Nt1: 
+	//analysisManager->CreateNtupleDColumn("RecPosTimeSigmoidCorr"); // Nt1: 11
+	analysisManager->CreateNtupleDColumn("TimeDiff"); // Nt1: 8
+	analysisManager->CreateNtupleDColumn("TimeRatio"); // Nt1: 9
+	analysisManager->CreateNtupleDColumn("YieldRatio"); // Nt1: 10
+	analysisManager->CreateNtupleDColumn("YieldRatio2"); // Nt1: 11
+	analysisManager->CreateNtupleDColumn("FirstTimestamp1"); //Nt1: 12
+	analysisManager->CreateNtupleDColumn("FirstTimestamp2"); //Nt1: 13
+	analysisManager->CreateNtupleDColumn("TimeDiff5th"); // Nt1: 14
+	analysisManager->CreateNtupleDColumn("TimeDiff1st"); // Nt1: 15
+	analysisManager->CreateNtupleDColumn("EdepScint"); // Nt1: 16
+	analysisManager->CreateNtupleDColumn("EdepPC1"); // Nt1: 17
+	analysisManager->CreateNtupleDColumn("EdepPC2"); // Nt1: 18
+	analysisManager->FinishNtuple();
+	
+}
+
+
+
+NovoRunAction::~NovoRunAction()
+{
+	delete G4AnalysisManager::Instance();
+}
+
+void NovoRunAction::BeginOfRunAction(const G4Run*)
+{
+	// inform the runManager to save random number seed
+	G4RunManager::GetRunManager()->SetRandomNumberStore(false);
+
+	// Get analysis manager
+	auto analysisManager = G4AnalysisManager::Instance();
+	
+	// reset accumulables to their initial values
+	G4AccumulableManager* accumulableManager = G4AccumulableManager::Instance();
+	accumulableManager->Reset();
+	
+	// Open ouput file
+	G4String filename = "NovoOutput";
+	analysisManager->OpenFile(filename);
+	
+}
+
+void NovoRunAction::EndOfRunAction(const G4Run* run)
+{
+	G4int nofEvents = run->GetNumberOfEvent();
+	if ( nofEvents == 0) return;
+	
+	// Print
+	//  
+	if (IsMaster()) {
+		G4cout
+			<< G4endl
+			<< "--------------------End of Global Run-----------------------";
+	}
+	else {
+		G4cout
+			<< G4endl
+			<< "--------------------End of Local Run------------------------";
+	}
+	G4cout
+		<< G4endl
+		<< " The run consists of " << nofEvents << " events" 
+		<< " where " << fNevScint.GetValue() << " detected scintillation photons in both photodetectors. " 
+		<< G4endl;
+		
+	// Get analysis manager
+	auto analysisManager = G4AnalysisManager::Instance();
+	analysisManager->Write();
+	analysisManager->CloseFile();
+	
+}
+
+void NovoRunAction::AddNevScint(G4int n)
+{
+	fNevScint += n;
+}
+

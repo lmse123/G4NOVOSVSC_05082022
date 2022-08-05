@@ -1,0 +1,97 @@
+
+/process/optical/defaults/scintillation/setByParticleType True
+/run/initialize
+
+# General particle source
+# gamma point source
+#/gps/pos/type Plane
+#/gps/pos/shape Circle
+/gps/pos/type Volume
+/gps/pos/shape Cylinder
+#/gps/pos/centre 0.0 11.9 0.0 cm
+/gps/pos/centre 0.0 17.4 -4.0 cm
+/gps/pos/halfz 5.0 cm
+/gps/pos/radius 1.0 cm
+#/gps/pos/halfx 1. cm
+#/gps/pos/halfy 1. cm
+#/gps/pos/sigma_r 0.42466 cm
+/gps/particle e-
+
+/gps/number 1
+#
+# the incident surface is in the y-z plane
+/gps/pos/rot1 1 0 0
+/gps/pos/rot2 0 0 1
+#
+# the beam is travelling along the y-axis without any angular
+#dispersion (angular despersion set to 0.0)
+/gps/ang/rot1 0 0 1
+/gps/ang/rot2 0 1 0
+/gps/ang/type iso
+/gps/ang/sigma_r 0. deg
+
+/gps/direction 0 -1 0
+#
+# /gps/ene/type User
+# /gps/hist/type energy
+# /gps/hist/point 0.01 2.3
+# /gps/hist/point 0.25 2.5
+# /gps/hist/point 0.5 1.3
+# /gps/hist/point 0.75 1.5
+# /gps/hist/point 1.0 1.4
+# /gps/hist/point 1.25 1.2
+# /gps/hist/point 1.50 0.8
+# /gps/hist/point 1.75 0.6
+# /gps/hist/point 2.0 0.25
+# /gps/hist/point 2.2 0
+
+/gps/ene/type Arb
+/gps/hist/type arb
+# /gps/hist/point 0.0 2.3
+# /gps/hist/point 0.25 2.5
+# /gps/hist/point 0.5 1.3
+# /gps/hist/point 0.75 1.5
+# /gps/hist/point 1.0 1.4
+# /gps/hist/point 1.25 1.2
+# /gps/hist/point 1.50 0.8
+# /gps/hist/point 1.75 0.6
+# /gps/hist/point 2.0 0.25
+# /gps/hist/point 2.1 0.1
+# /gps/hist/point 2.2 0.02
+
+# /gps/hist/point 0.0 0.0
+# /gps/hist/point 0.25 1.0
+# /gps/hist/point 0.5 0.2
+# /gps/hist/point 0.75 0.25
+# /gps/hist/point 1.0 0.2
+# /gps/hist/point 1.25 0.15
+# /gps/hist/point 1.5 0.1
+# /gps/hist/point 1.75 0.05
+# /gps/hist/point 2.0 0.025
+# /gps/hist/point 2.2 0
+
+/gps/hist/point 0.0 3.2
+/gps/hist/point 0.13 3.0
+/gps/hist/point 0.25 2.8
+/gps/hist/point 0.375 2.5
+/gps/hist/point 0.5 0.75
+/gps/hist/point 0.544 0.6
+/gps/hist/point 0.75 0.7
+/gps/hist/point 1.0 0.6
+/gps/hist/point 1.5 0.5
+/gps/hist/point 1.75 0.3
+/gps/hist/point 2.0 0.125
+/gps/hist/point 2.1 0.1
+/gps/hist/point 2.2 0.01
+/gps/hist/inter Log
+
+# commands below are independent of gps
+#
+# /analysis/setFileName testEne
+# /analysis/h1/set 1 100 0 15 MeV
+# /analysis/h2/set 1 100 -5 5 cm none linear 100 -5 5 cm none linear #x-y
+# /analysis/h2/set 4 120 0 360 deg none linear 100 -1 1 none none linear
+
+/tracking/verbose 0
+/run/printProgress 1000
+/run/beamOn 1000000

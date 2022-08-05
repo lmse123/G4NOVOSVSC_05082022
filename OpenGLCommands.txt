@@ -1,0 +1,21 @@
+Command directory path : /
+ Sub-directories :
+ 1) /control/   UI control commands.
+ 2) /units/   Available units.
+ 3) /profiler/   Profiler controls.
+ 4) /particle/   Particle control commands.
+ 5) /geometry/   Geometry control commands.
+ 6) /tracking/   TrackingManager and SteppingManager control commands.
+ 7) /event/   EventManager control commands.
+ 8) /cuts/   Commands for G4VUserPhysicsList.
+ 9) /run/   Run control commands.
+ 10) /random/   Random number status control commands.
+ 11) /process/   Process Table control commands.
+ 12) /material/   Commands for materials
+ 13) /physics_lists/   commands related to the physics simulation engine.
+ 14) /gps/   General Particle Source control commands.
+ 15) /analysis/   analysis control
+ 16) /vis/   Visualization commands.
+ 17) /hits/   Sensitive detectors and Hits
+ 18) /heptst/   Controls for the hadronic energy/momentum test
+ 19) /grdm/   Controls for the Radioactive Decay Module.
