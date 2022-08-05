@@ -1,0 +1,29 @@
+To build the program:
+* Prerequisites: Geant4, cmake, gcc
+
+1: Make a build directory:
+mkdir build
+
+2: Run cmake:
+cmake /path/to/G4NovoSVSC
+
+3: Run make
+make
+
+4: To run:
+./novosvsc nameofmacro.in
+
+Test with beamN.in:
+./novosvsc beamN.in
+
+Will produce root file NovoOutput.root
+
+*** Description of the macros ***
+beamN.in:
+Monoenergetic gamma point source
+
+beam_hist.in:
+Extended beta source with the energy profile of Sr-90.
+
+vis.mac:
+Visualization macro
