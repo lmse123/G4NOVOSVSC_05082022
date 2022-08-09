@@ -122,6 +122,7 @@ NovoRunAction::NovoRunAction(NovoDetectorConstruction* det, NovoEventAction* ev)
 			analysisManager->CreateNtupleDColumn(ntupleNo,"OpticalPhotonHitPosXs",fEventAction->GetOpticalPhotonHitPosXs()); // 28
 			analysisManager->CreateNtupleDColumn(ntupleNo,"OpticalPhotonHitPosYs",fEventAction->GetOpticalPhotonHitPosYs()); // 29
 			analysisManager->CreateNtupleDColumn(ntupleNo,"OpticalPhotonHitPosZs",fEventAction->GetOpticalPhotonHitPosZs()); // 30
+			analysisManager->CreateNtupleIColumn(ntupleNo,"OpticalPhotonStepNr",fEventAction->GetOpticalPhotonStepNr()); // 31
 		
 			// TODO: more columns ....
 			analysisManager->FinishNtuple(ntupleNo);

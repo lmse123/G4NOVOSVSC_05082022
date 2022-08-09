@@ -24,10 +24,10 @@ NovoScintHit::NovoScintHit()
   fOpticalPhotonCount(0),
   fOpticalPhotonTheta(0),
   fOpticalPhotonPhi(0),
-  // fOpticalPhotonPosition(0)
   fOpticalPhotonX(0),
   fOpticalPhotonY(0),
-  fOpticalPhotonZ(0)
+  fOpticalPhotonZ(0),
+  fOpticalPhotonStepNr(0)
 {
 }
 
@@ -54,10 +54,10 @@ const NovoScintHit& NovoScintHit::operator=(const NovoScintHit &right)
   fOpticalPhotonCount = right.fOpticalPhotonCount;
   fOpticalPhotonTheta = right.fOpticalPhotonTheta;
   fOpticalPhotonPhi = right.fOpticalPhotonPhi;
-  // fOpticalPhotonPosition = right.fOpticalPhotonPosition;
   fOpticalPhotonX = right.fOpticalPhotonX;
   fOpticalPhotonY = right.fOpticalPhotonY;
   fOpticalPhotonZ = right.fOpticalPhotonZ;
+  fOpticalPhotonStepNr = right.fOpticalPhotonStepNr;
   return *this;
 }
 

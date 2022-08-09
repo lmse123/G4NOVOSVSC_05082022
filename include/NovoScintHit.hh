@@ -91,6 +91,10 @@ class NovoScintHit : public G4VHit
 		inline void         SetOpticalPhotonZ(G4double z){fOpticalPhotonZ.push_back(z);} // Append z hit position to x-coordinate vector
 		inline G4DataVector GetOpticalPhotonZ(){return fOpticalPhotonZ;}         // Return vector all z hit positions
 		
+		inline void         SetOpticalPhotonStepNr(G4int stepNr){fOpticalPhotonStepNr.push_back(stepNr);} // Append StepNr hit position to x-coordinate vector
+		inline std::vector<G4int> GetOpticalPhotonStepNr(){return fOpticalPhotonStepNr;}         // Return vector all StepNr hit positions
+		// inline G4DataVector GetOpticalPhotonStepNr(){return fOpticalPhotonStepNr;}         // Return vector all StepNr hit positions
+		
 
 	private:
 
@@ -111,6 +115,8 @@ class NovoScintHit : public G4VHit
 		G4DataVector  fOpticalPhotonX;             //
 		G4DataVector  fOpticalPhotonY;             //
 		G4DataVector  fOpticalPhotonZ;             //
+		std::vector<G4int>  fOpticalPhotonStepNr;             //
+		// G4DataVector  fOpticalPhotonStepNr;             //
 		
 
 };

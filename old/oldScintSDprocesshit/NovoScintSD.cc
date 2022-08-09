@@ -91,7 +91,7 @@ G4bool NovoScintSD::ProcessHits(G4Step* aStep,G4TouchableHistory* ){
 
 G4bool NovoScintSD::ProcessHits_constStep(const G4Step* aStep,G4TouchableHistory* ){
 	
-	G4int    fVerbose = 0; // if > 0 --> print out hit information. 
+	G4int    fVerbose = 1; // if > 0 --> print out hit information. 
 	G4int    parentID = aStep->GetTrack()->GetParentID(); //ParentID = 0 = primary particle
 	G4double     edep = aStep->GetTotalEnergyDeposit();
 	G4String particleName = aStep->GetTrack()->GetParticleDefinition()->GetParticleName(); // Particle name
@@ -114,7 +114,6 @@ G4bool NovoScintSD::ProcessHits_constStep(const G4Step* aStep,G4TouchableHistory
 	if (particleName == "opticalphoton"){particleID = 1001;}
 	if (particleName == "gamma"){particleID = 1; }
 	if (particleName == "proton"){particleID = 2;} // ?
-	if (particleName == "e-"){particleID = 3;} // ?
 	
 	// Has this scintillator been hit before? Find the already exisitng hit or create a new hit
 
@@ -149,39 +148,22 @@ G4bool NovoScintSD::ProcessHits_constStep(const G4Step* aStep,G4TouchableHistory
 		for (G4int i = 0; i < nSecondaries ; i ++){
 			const G4Track * sTrack = (*secondaries)[i];
 			G4String name = sTrack->GetParticleDefinition()->GetParticleName();
-			// G4ThreeVector mom = sTrack->GetMomentumDirection();
-			// G4ThreeVector sPos = sTrack->GetPosition();
-			// G4double theta = mom.theta();
-			// G4double phi = mom.phi();   
+			G4ThreeVector mom = sTrack->GetMomentumDirection();
+			G4ThreeVector sPos = sTrack->GetPosition();
+			G4double theta = mom.theta();
+			G4double phi = mom.phi();   
 			
-			// scintHit->SetOpticalPhotonTheta(theta);
-			// scintHit->SetOpticalPhotonPhi(phi);
-			// // scintHit->SetOpticalPhotonPosition(sPos); // cannot store a vector in another vector
-			// scintHit->SetOpticalPhotonX(sPos.x()); 
-			// scintHit->SetOpticalPhotonY(sPos.y()); 
-			// scintHit->SetOpticalPhotonZ(sPos.z()); 
+			scintHit->SetOpticalPhotonTheta(theta);
+			scintHit->SetOpticalPhotonPhi(phi);
+			// scintHit->SetOpticalPhotonPosition(sPos); // cannot store a vector in another vector
+			scintHit->SetOpticalPhotonX(sPos.x()); 
+			scintHit->SetOpticalPhotonY(sPos.y()); 
+			scintHit->SetOpticalPhotonZ(sPos.z()); 
 			
 			if (name == "opticalphoton" ){optPhotonCount++;} // count optical photons produced in the hit
 			if (name == "e-" ){electronCount++;} // count electrons produced in the hit
 		}
 	}
-
-	// Store info on optical photons
-	if (particleName == "opticalphoton"){
-		G4ThreeVector sPos = aStep->GetTrack()->GetPosition();
-		G4ThreeVector mom = aStep->GetTrack()->GetMomentumDirection();
-		G4double theta = mom.theta(); // scatterign angle - theta
-		G4double phi = mom.phi();     // scatterign angle - phi
-		G4double stepNr = aStep->GetTrack()->GetCurrentStepNumber();     // scatterign angle - phi
-		
-		scintHit->SetOpticalPhotonX(sPos.x()); 
-		scintHit->SetOpticalPhotonY(sPos.y()); 
-		scintHit->SetOpticalPhotonZ(sPos.z()); 
-		scintHit->SetOpticalPhotonStepNr(stepNr); 
-		scintHit->SetOpticalPhotonTheta(theta);
-		scintHit->SetOpticalPhotonPhi(phi);
-	}
-
 
 	// Increase values of the event
 	scintHit->IncEdep(edep);

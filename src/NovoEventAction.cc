@@ -60,13 +60,12 @@ NovoEventAction::NovoEventAction(NovoDetectorConstruction* det)
 	fHitPosY_P(0),
 	fHitPosZ_N(0),
 	fHitPosZ_P(0),
-	// fScintElectronCount(0), // these two should not be vectors
-	// fScintOpticalPhotonCount(0),
 	fOpticalPhotonTheta(0),
 	fOpticalPhotonPhi(0),
 	fOpticalPhotonHitPosXs(0),
 	fOpticalPhotonHitPosYs(0),
-	fOpticalPhotonHitPosZs(0)
+	fOpticalPhotonHitPosZs(0),
+	fOpticalPhotonStepNr(0)
 	//fRunAction(runAction)
 {
 }
@@ -92,15 +91,14 @@ void NovoEventAction::BeginOfEventAction(const G4Event* anEvent)
 	fScintHitPosXs.clear(); 
 	fScintHitPosYs.clear();
 	fScintHitPosZs.clear();
-	// fScintElectronCount.clear();
-	// fScintOpticalPhotonCount.clear();
 	fOpticalPhotonTheta.clear();
 	fOpticalPhotonPhi.clear();
 	fOpticalPhotonHitPosXs.clear();
 	fOpticalPhotonHitPosYs.clear();
 	fOpticalPhotonHitPosZs.clear();
+	fOpticalPhotonStepNr.clear();
 	
-  	fVerbose = 1; // Verbose ??
+  	fVerbose = 0; // Verbose ??
 	G4SDManager* SDman = G4SDManager::GetSDMpointer(); // Sensitive detector manager
 	// TODO: Get the ID number of the sensitive detector. (what is a collection?)
 	if(fBSGatingCollID<0){
@@ -172,11 +170,12 @@ void NovoEventAction::EndOfEventAction(const G4Event* anEvent)
 				// std::vector<G4double> z = (*scintHC)[i]->GetScintHitPosZs(); 
 				G4int      electronCount = (*scintHC)[i]->GetElectronCount();       // total energy deposited in scintillator
 				G4int opticalPhotonCount = (*scintHC)[i]->GetOpticalPhotonCount();       // total energy deposited in scintillator
-				std::vector<G4double> optPhotonTheta = (*scintHC)[i]->GetOpticalPhotonTheta(); 
-				std::vector<G4double> optPhotonPhi = (*scintHC)[i]->GetOpticalPhotonPhi(); 
-				std::vector<G4double> x_op = (*scintHC)[i]->GetOpticalPhotonX(); // hit position of optical photons 
-				std::vector<G4double> y_op = (*scintHC)[i]->GetOpticalPhotonY(); 
-				std::vector<G4double> z_op = (*scintHC)[i]->GetOpticalPhotonZ(); 
+				std::vector<G4double> optPhoton_Theta = (*scintHC)[i]->GetOpticalPhotonTheta(); 
+				std::vector<G4double> optPhoton_Phi = (*scintHC)[i]->GetOpticalPhotonPhi(); 
+				std::vector<G4double> optPhoton_x = (*scintHC)[i]->GetOpticalPhotonX(); // hit position of optical photons 
+				std::vector<G4double> optPhoton_y = (*scintHC)[i]->GetOpticalPhotonY(); 
+				std::vector<G4double> optPhoton_z = (*scintHC)[i]->GetOpticalPhotonZ(); 
+				std::vector<G4int> optPhoton_stepNr = (*scintHC)[i]->GetOpticalPhotonStepNr(); 
 				// Fill ntuple
 				analysisManager->FillNtupleDColumn(ntupleNo, 18, parentID);
 				analysisManager->FillNtupleDColumn(ntupleNo, 19, particleID);
@@ -188,20 +187,20 @@ void NovoEventAction::EndOfEventAction(const G4Event* anEvent)
 				analysisManager->FillNtupleDColumn(ntupleNo, 24, electronCount);
 				analysisManager->FillNtupleDColumn(ntupleNo, 25, opticalPhotonCount);
 				// theta and phi (tuple col. 26 and 27 )
-				fOpticalPhotonTheta = optPhotonTheta;
-				fOpticalPhotonPhi = optPhotonPhi;
+				fOpticalPhotonTheta = optPhoton_Theta;
+				fOpticalPhotonPhi = optPhoton_Phi;
 				// hit position x,y,z of optical photons (tuple col. 21,22,23)
-				fOpticalPhotonHitPosXs = x_op;
-				fOpticalPhotonHitPosYs = y_op;
-				fOpticalPhotonHitPosZs = z_op;
+				fOpticalPhotonHitPosXs = optPhoton_x;
+				fOpticalPhotonHitPosYs = optPhoton_y;
+				fOpticalPhotonHitPosZs = optPhoton_z;
+				fOpticalPhotonStepNr = optPhoton_stepNr;
 
 
 				// TODO:  hit pos x,y,z, ...
 				analysisManager->FillH1(4,edep);
 
-				// if (fVerbose > 0) G4cout <<"scintNumber: " <<scintNumber<< G4endl;
-				// if (fVerbose > 0) 
-				G4cout << "optical photon count: " << opticalPhotonCount << G4endl;
+				if (fVerbose > 0) G4cout <<"scintNumber: " <<scintNumber<< G4endl;
+				if (fVerbose > 0) G4cout << "optical photon count: " << opticalPhotonCount << G4endl;
 				if (fVerbose > 0) G4cout << "electron count: " << electronCount << G4endl;
 			}
 		}

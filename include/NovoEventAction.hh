@@ -62,6 +62,7 @@ class NovoEventAction : public G4UserEventAction
 		inline std::vector<G4int> &GetOpticalPhotonCount(){return fScintOpticalPhotonCount; }
 		inline std::vector<G4double> &GetOpticalPhotonTheta(){return fOpticalPhotonTheta; }
 		inline std::vector<G4double> &GetOpticalPhotonPhi(){return fOpticalPhotonPhi; }
+		inline std::vector<G4int> &GetOpticalPhotonStepNr(){return fOpticalPhotonStepNr; }
 
 		// Getters for photocathode related members
 		inline std::vector<G4double>& GetHitPosX_N() {return fHitPosX_N;}
@@ -111,6 +112,7 @@ class NovoEventAction : public G4UserEventAction
 		std::vector<G4double> fOpticalPhotonHitPosXs; // array of names corresponding to coordinates HitPosX,Y,Z
 		std::vector<G4double> fOpticalPhotonHitPosYs; // array of names corresponding to coordinates HitPosX,Y,Z
 		std::vector<G4double> fOpticalPhotonHitPosZs; // array of names corresponding to coordinates HitPosX,Y,Z
+		std::vector<G4int> fOpticalPhotonStepNr; // array of names corresponding to coordinates HitPosX,Y,Z
 
 		
 		// Event info for photocathode SDs
