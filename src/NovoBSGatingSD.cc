@@ -54,35 +54,57 @@ G4bool NovoBSGatingSD::ProcessHits(G4Step* aStep,G4TouchableHistory* )
 
 G4bool NovoBSGatingSD::ProcessHits_constStep(const G4Step* aStep,G4TouchableHistory* )
 {
+  G4int fVerbose = 0;
   // Hit information
   G4double edep = aStep->GetTotalEnergyDeposit(); // Hit energy
   G4int parentID = aStep->GetTrack()->GetParentID(); //ParentID
   G4String particleName = aStep->GetTrack()->GetParticleDefinition()->GetParticleName(); // Particle name
+  G4String preVol = aStep->GetPreStepPoint()->GetPhysicalVolume()->GetLogicalVolume()->GetName();
+  G4String postVol = aStep->GetPostStepPoint()->GetPhysicalVolume()->GetLogicalVolume()->GetName();
+	G4int n = fBSHitCollection->entries();
 
-  // Filter hits
-  //if(parentID!=0) {return false; }// Only save primary hits
-  if(edep==0.) return false; //No edep so dont count as hit
-  // Is the hit a primary particle?
-  G4bool isPrimary = (parentID == 0 ) ? true : false;
+  // filter hits
+  if         (n>0) return false;       // only need to know if the BSG has been hit once.
+  if (parentID!=0) return false;       // Only save primary particles
+  if    (edep==0.) return false;       // No edep so dont count as hit
 
-  //Get the average hit position
-  G4StepPoint* thePrePoint = aStep->GetPreStepPoint();
-	G4StepPoint* thePostPoint = aStep->GetPostStepPoint();
-	G4ThreeVector pos = thePrePoint->GetPosition() + thePostPoint->GetPosition();
-	pos/=2.;
 
-  // Find pre step volume
-  G4TouchableHistory* theTouchable = (G4TouchableHistory*)(thePrePoint->GetTouchable());
-  G4VPhysicalVolume* thePrePV = theTouchable->GetVolume();
+  // initiate a hit object
+  NovoBSGatingHit* bsgHit = new NovoBSGatingHit();
+  fBSHitCollection->insert(bsgHit);
+  bsgHit->SetParentID(parentID);
 
-  // Create hit and set attributes
-  NovoBSGatingHit* BSGatingHit = new NovoBSGatingHit(thePrePV);
-	BSGatingHit->SetEdep(edep); // 
-	BSGatingHit->SetPos(pos); // Hit position
-	BSGatingHit->SetIsPrimary(isPrimary); // Hit isPrimary
-  BSGatingHit->SetParticleName(particleName); // not used atm (22/07/2022)
-  // Add hit to hit collection
-	fBSHitCollection->insert(BSGatingHit);
+  if (fVerbose >0 ){
+    G4cout << "NEW HIT --------------------------" << G4endl;
+    G4cout << "fBSHitCollection entries:      " << n             << G4endl;
+    G4cout << "parent ID: " << parentID             << G4endl;
+    G4cout << "preVol:    " << preVol                   << G4endl;
+    G4cout << "postVol:   " << postVol                   << G4endl;
+    G4cout << "edep:      " << edep             << G4endl;
+  }
+
+
+  // // Is the hit a primary particle?
+  // G4bool isPrimary = (parentID == 0 ) ? true : false;
+
+  // //Get the average hit position
+  // G4StepPoint* thePrePoint = aStep->GetPreStepPoint();
+	// G4StepPoint* thePostPoint = aStep->GetPostStepPoint();
+	// G4ThreeVector pos = thePrePoint->GetPosition() + thePostPoint->GetPosition();
+	// pos/=2.;
+
+  // // Find pre step volume
+  // G4TouchableHistory* theTouchable = (G4TouchableHistory*)(thePrePoint->GetTouchable());
+  // G4VPhysicalVolume* thePrePV = theTouchable->GetVolume();
+
+  // // Create hit and set attributes
+  // NovoBSGatingHit* BSGatingHit = new NovoBSGatingHit(thePrePV);
+	// BSGatingHit->SetEdep(edep); // 
+	// BSGatingHit->SetPos(pos); // Hit position
+	// BSGatingHit->SetIsPrimary(isPrimary); // Hit isPrimary
+  // BSGatingHit->SetParticleName(particleName); // not used atm (22/07/2022)
+  // // Add hit to hit collection
+	// fBSHitCollection->insert(BSGatingHit);
 	return true;
 }
 

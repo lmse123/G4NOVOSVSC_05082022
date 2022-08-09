@@ -80,6 +80,8 @@ void NovoEventAction::BeginOfEventAction(const G4Event* anEvent)
 	G4EventManager::
     GetEventManager()->SetUserInformation(new NovoUserEventInformation);
 
+  	fVerbose = 0; // Verbose 
+
 	// Clear event vectors (position and time stamps and IDs) -?
 	// Photocathode vectors
 	fHitPosX_N.clear(); fHitPosX_P.clear();
@@ -98,7 +100,6 @@ void NovoEventAction::BeginOfEventAction(const G4Event* anEvent)
 	fOpticalPhotonHitPosZs.clear();
 	fOpticalPhotonStepNr.clear();
 	
-  	fVerbose = 0; // Verbose ??
 	G4SDManager* SDman = G4SDManager::GetSDMpointer(); // Sensitive detector manager
 	// TODO: Get the ID number of the sensitive detector. (what is a collection?)
 	if(fBSGatingCollID<0){
@@ -110,6 +111,8 @@ void NovoEventAction::BeginOfEventAction(const G4Event* anEvent)
 	if(fPCCollID<0){
 		fPCCollID=SDman->GetCollectionID("photocatHitCollection");
 	}
+
+
 	// her kan du lage en ntuple for lagrind av info. create ntuple, double
 /*	G4int evNum = anEvent->GetEventID();
 	//G4cout << "Event number: " << evNum << G4endl;
@@ -127,6 +130,9 @@ void NovoEventAction::BeginOfEventAction(const G4Event* anEvent)
 
 void NovoEventAction::EndOfEventAction(const G4Event* anEvent)
 {
+	if (fVerbose >0){
+		G4cout << "EVENT " << anEvent->GetEventID() << " ____________ " << G4endl;
+	}
 	NovoUserEventInformation* eventInformation = (NovoUserEventInformation*)anEvent->GetUserInformation(); 
 
 	NovoBSGatingHitsCollection* bsHC = 0;
@@ -147,6 +153,27 @@ void NovoEventAction::EndOfEventAction(const G4Event* anEvent)
 			pcHC = (NovoPhotocatHitsCollection*)(hitsCE->GetHC(fPCCollID));
 		}
 	}
+
+	// Process the event's backscatter (bs) gating hit collection
+	G4int bs_ntupleNo = 1;
+	
+	if(bsHC){
+		G4int nHitBs = bsHC->entries(); // there should be one bs hit collection per event
+		if(nHitBs > 0){
+			for(G4int i = 0; i < nHitBs; i++){
+			// G4cout << "bs entry "<<i << G4endl;
+
+			G4int bsParentID = (*bsHC)[i]->GetParentID();  
+			analysisManager->FillNtupleDColumn(bs_ntupleNo, 0, bsParentID);
+		}
+		}
+		if(nHitBs == 0){
+			// G4cout << "no bs entry " << G4endl;
+			G4int bsParentID = -2;
+			analysisManager->FillNtupleDColumn(bs_ntupleNo, 0, bsParentID);
+		}
+	}
+	
 
 	// Process the event's scintillator (scint) hit collection
 	if(scintHC){
@@ -196,23 +223,25 @@ void NovoEventAction::EndOfEventAction(const G4Event* anEvent)
 				fOpticalPhotonStepNr = optPhoton_stepNr;
 
 
+				// // backscatter events
+				// // was this bar part of a backscatter event?
+				// // ie.e, was the backscatter detector hit by a particle comming from this (?) bar 
+				// G4int   bsParentID = -2;
+				// if(bsHC){
+				// 	G4int nHitBs = bsHC->entries(); // there should be one bs hit collection per event
+				// 	if(nHitBs == 1){
+				// 		bsParentID = (*bsHC)[0]->GetParentID();  
+				// 	}
+				// }
+				// analysisManager->FillNtupleIColumn(ntupleNo, 32, bsParentID);
 				// TODO:  hit pos x,y,z, ...
 				analysisManager->FillH1(4,edep);
 
-				if (fVerbose > 0) G4cout <<"scintNumber: " <<scintNumber<< G4endl;
-				if (fVerbose > 0) G4cout << "optical photon count: " << opticalPhotonCount << G4endl;
-				if (fVerbose > 0) G4cout << "electron count: " << electronCount << G4endl;
+				if (fVerbose >1 ) G4cout <<"scintNumber: " <<scintNumber<< G4endl;
+				if (fVerbose >1 ) G4cout << "optical photon count: " << opticalPhotonCount << G4endl;
+				if (fVerbose >1 ) G4cout << "electron count: " << electronCount << G4endl;
 			}
 		}
-	}
-
-	// Process the event's backscatter (bs) gating hit collection
-	if(bsHC){
-		// Get number of hits in the hit collection
-		// TODO: get information of interest. 
-		// Fill ntuple
-		// TODO: ...
-
 	}
 
 	// Process the event's photocathode (pc) hit collection
@@ -276,7 +305,7 @@ void NovoEventAction::EndOfEventAction(const G4Event* anEvent)
 						analysisManager->FillH2(4,fHitPosX_P.at(h), fHitPosY_P.at(h));
 					}
 				}
-				if (fVerbose>0) G4cout <<"ntupleNo: " <<ntupleNo<< ", pcnumber: "<< pcnumber  << G4endl;
+				if (fVerbose> 1)G4cout <<"ntupleNo: " <<ntupleNo<< ", pcnumber: "<< pcnumber  << G4endl;
 			}
 		}
 	}
@@ -287,6 +316,7 @@ void NovoEventAction::EndOfEventAction(const G4Event* anEvent)
 	}
 	// backscatter gating ntuple
 	//analysisManager->AddNtupleRow(n_BSGating_tupleNo);
+	analysisManager->AddNtupleRow(bs_ntupleNo);
 }
 
 

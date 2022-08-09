@@ -19,7 +19,8 @@ NovoBSGatingHit::NovoBSGatingHit()
 	//fTime(0),
 	fPos(0.),
 	fPhysVol(0),
-	fIsPrimary(false)
+	fIsPrimary(false),
+	fParentID(0)
 {
 }
 
@@ -41,6 +42,7 @@ const NovoBSGatingHit& NovoBSGatingHit::operator=(const NovoBSGatingHit &right)
   fPos = right.fPos;
   fPhysVol = right.fPhysVol;
   fIsPrimary = right.fIsPrimary;
+  fParentID = right.fParentID;
   return *this;
 }
 

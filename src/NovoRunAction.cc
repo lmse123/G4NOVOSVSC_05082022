@@ -123,13 +123,21 @@ NovoRunAction::NovoRunAction(NovoDetectorConstruction* det, NovoEventAction* ev)
 			analysisManager->CreateNtupleDColumn(ntupleNo,"OpticalPhotonHitPosYs",fEventAction->GetOpticalPhotonHitPosYs()); // 29
 			analysisManager->CreateNtupleDColumn(ntupleNo,"OpticalPhotonHitPosZs",fEventAction->GetOpticalPhotonHitPosZs()); // 30
 			analysisManager->CreateNtupleIColumn(ntupleNo,"OpticalPhotonStepNr",fEventAction->GetOpticalPhotonStepNr()); // 31
+			// analysisManager->CreateNtupleIColumn(ntupleNo,"BackscatterParentID"); // 32 - used to find backscatter events
 		
 			// TODO: more columns ....
 			analysisManager->FinishNtuple(ntupleNo);
 			ntupleNo++;
 		}
-		
 	}
+
+	G4int bs_ntupleNo = 1;
+	G4String bs_ntuplename = "Ntuple-backscatter";
+	G4String bs_ntupletitle = "Event info, backscatter";
+	analysisManager->CreateNtuple(bs_ntuplename,bs_ntupletitle);
+	analysisManager->CreateNtupleDColumn(bs_ntupleNo,"particleID"); // 0
+	analysisManager->FinishNtuple(bs_ntupleNo);
+
 	// Create scintillator + photocathode tuple(s)
 	// TODO: N tuples. 
 

@@ -50,16 +50,20 @@ int main(int argc,char** argv)
 	G4VModularPhysicsList* physicsList = new QGSP_BIC_HP;
 	//~ G4VModularPhysicsList* physicsList = new FTFP_BERT;
 	physicsList->ReplacePhysics(new G4EmStandardPhysics_option4());
-	G4OpticalPhysics* opticalPhysics = new G4OpticalPhysics();
-	opticalPhysics->SetScintillationYieldFactor(1.);
-	//~ opticalPhysics->SetScintillationExcitationRatio(0.0);
-	opticalPhysics->SetTrackSecondariesFirst(kCerenkov, false);
-	opticalPhysics->SetTrackSecondariesFirst(kScintillation, false);
-	opticalPhysics->SetScintillationByParticleType(true);
-	opticalPhysics->SetFiniteRiseTime(true);
-	//~ opticalPhysics->GetScintillationProcess()->SetScintillationByParticleType(false);
-	//~ opticalPhysics->SetScintillationByParticleType(false);
-	physicsList->RegisterPhysics(opticalPhysics); // test to fix energy spect.
+
+	G4bool OpticalPhysicsON = true;
+	if (OpticalPhysicsON == true ){
+		G4OpticalPhysics* opticalPhysics = new G4OpticalPhysics();
+		opticalPhysics->SetScintillationYieldFactor(1.);
+		//~ opticalPhysics->SetScintillationExcitationRatio(0.0);
+		opticalPhysics->SetTrackSecondariesFirst(kCerenkov, false);
+		opticalPhysics->SetTrackSecondariesFirst(kScintillation, false);
+		opticalPhysics->SetScintillationByParticleType(true);
+		opticalPhysics->SetFiniteRiseTime(true);
+		//~ opticalPhysics->GetScintillationProcess()->SetScintillationByParticleType(false);
+		//~ opticalPhysics->SetScintillationByParticleType(false);
+		physicsList->RegisterPhysics(opticalPhysics); // test to fix energy spect.
+	}
 
 	physicsList->SetVerboseLevel(0);
 	runManager->SetUserInitialization(physicsList);

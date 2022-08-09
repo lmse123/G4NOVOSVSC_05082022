@@ -50,12 +50,17 @@ class NovoBSGatingHit : public G4VHit
 		inline G4String GetParticleName () const {return fParticleName;} // get name of particle of THIS hit
 		inline void 	SetParticleName (G4String particleName) {fParticleName=particleName;}  // set name of particle of THIS hit
 
+
+		inline G4int GetParentID () const {return fParentID;}               // 
+		inline void 	SetParentID (G4int parentID) {fParentID=parentID;}  //
+
 	private:
-		G4double fEdep;                    // energy deposited in the hit
-		G4ThreeVector fPos;                // position of the hit
-		const G4VPhysicalVolume* fPhysVol; // volume of the hit (when is this used?)
-		G4bool 	fIsPrimary;
-		G4String	fParticleName;         // name of the particle of the hit
+		G4double      fEdep;                 // energy deposited in the hit
+		G4ThreeVector fPos;                  // position of the hit
+		const G4VPhysicalVolume* fPhysVol;   // volume of the hit (when is this used?)
+		G4bool 	      fIsPrimary;
+		G4String	  fParticleName;         // name of the particle of the hit
+		G4int	      fParentID;             // parent ID of the hit
 };
 
 typedef G4THitsCollection<NovoBSGatingHit> NovoBSGatingHitsCollection;
