@@ -51,6 +51,11 @@ set(NOVO_SCRIPTS
   beamIso.in
   beamPPencil.in
   beamPencil.in
+  beamPencil_1cm.in
+  beamPencil_3cm.in
+  beamPencil_5cm.in
+  beamPencil_7cm.in
+  beamPencil_9cm.in
   beam1.in
   beamN.in
   beam_hist.in

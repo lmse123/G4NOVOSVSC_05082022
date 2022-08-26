@@ -205,8 +205,8 @@ void NovoDetectorConstruction::DefineMaterials()
   fEJ276MPT->AddProperty("ELECTRONSCINTILLATIONYIELD", pEnergy, pYIELDEJ276, pNumEJ276);
   fEJ276MPT->AddProperty("IONSCINTILLATIONYIELD", pEnergy, pYIELDEJ276, pNumEJ276);
   fEJ276MPT->AddConstProperty("RESOLUTIONSCALE", 1.);
-  fEJ276MPT->AddConstProperty("FASTTIMECONSTANT", 13.*ns); // Decay time - from EJ276 data sheet
- // fEJ276MPT->AddConstProperty("FASTTIMECONSTANT", 4*ns); // Decay time, from Grodzicka Kobylka 2020
+  // fEJ276MPT->AddConstProperty("FASTTIMECONSTANT", 13.*ns); // Decay time - from EJ276 data sheet
+ fEJ276MPT->AddConstProperty("FASTTIMECONSTANT", 4*ns); // Decay time, from Grodzicka Kobylka 2020
   fEJ276MPT->AddConstProperty("FASTSCINTILLATIONRISETIME", 1.0*ns); //Rise time
   fEJ276MPT->AddConstProperty("SLOWTIMECONSTANT", 270.*ns); // Decay time
   fEJ276MPT->AddConstProperty("SLOWSCINTILLATIONRISETIME", 35.*ns); //Rise time - Ilker "remove" 28/04/2022
@@ -299,7 +299,18 @@ G4VPhysicalVolume* NovoDetectorConstruction::ConstructDetector()
   G4double BS_dist_to_bar = 2*mm;
   G4double BS_dist_from_end_to_pmt =5*cm; //position along the bar, 0 = end
   G4double BS_xpos = fScint_x/2+BS_dist_to_bar+BS_hz/2;
-  G4double BS_zpos = fScint_z/2-BS_dist_from_end_to_pmt; //0*cm;////position along the bar, 0 = center
+  // G4double BS_zpos = -1*cm; //position along the bar, 0 = center
+  // G4double BS_zpos = -3*cm; //position along the bar, 0 = center
+  // G4double BS_zpos = -5*cm; //position along the bar, 0 = center
+  // G4double BS_zpos = -7*cm; //position along the bar, 0 = center
+  // G4double BS_zpos = -9*cm; //position along the bar, 0 = center
+  G4double BS_zpos = 0*cm; //position along the bar, 0 = center
+  // G4double BS_zpos = 1*cm; //position along the bar, 0 = center
+  // G4double BS_zpos = 3*cm; //position along the bar, 0 = center
+  // G4double BS_zpos = 5*cm; //position along the bar, 0 = center
+  // G4double BS_zpos = 7*cm; //position along the bar, 0 = center
+  // G4double BS_zpos = 9*cm; //position along the bar, 0 = center
+  // G4double BS_zpos = fScint_z/2-BS_dist_from_end_to_pmt; //position along the bar in terms of distance from bar end
   G4double BS_rotation = 90*deg;
     G4RotationMatrix* rotationMatrix = new G4RotationMatrix();
     rotationMatrix->rotateY(BS_rotation);
@@ -523,8 +534,8 @@ void NovoDetectorConstruction::SetDefaults() {
 
   fScint_x = 1.0*cm;
   fScint_y = 1.0*cm;
-  fScint_z = 10.0*cm; // Decided to try out shorter bars. (Not sure why)
-  // fScint_z = 20.0*cm;
+  // fScint_z = 10.0*cm; // Decided to try out shorter bars. (Not sure why)
+  fScint_z = 20.0*cm;
 
   fPhotocath_x = fScint_x;
   fPhotocath_y = fScint_y;
