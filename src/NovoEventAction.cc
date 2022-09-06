@@ -204,15 +204,15 @@ void NovoEventAction::EndOfEventAction(const G4Event* anEvent)
 				std::vector<G4double> optPhoton_z = (*scintHC)[i]->GetOpticalPhotonZ(); 
 				std::vector<G4int> optPhoton_stepNr = (*scintHC)[i]->GetOpticalPhotonStepNr(); 
 				// Fill ntuple
-				analysisManager->FillNtupleDColumn(ntupleNo, 18, parentID);
-				analysisManager->FillNtupleDColumn(ntupleNo, 19, particleID);
+				analysisManager->FillNtupleIColumn(ntupleNo, 18, parentID);
+				analysisManager->FillNtupleIColumn(ntupleNo, 19, particleID);
 				analysisManager->FillNtupleDColumn(ntupleNo, 20, edep);
 				// hit position of primaries and secondary electrons x,y,z (tuple col. 21,22,23)
 				// fScintHitPosXs = x;
 				// fScintHitPosYs = y;
 				// fScintHitPosZs = z;
-				analysisManager->FillNtupleDColumn(ntupleNo, 24, electronCount);
-				analysisManager->FillNtupleDColumn(ntupleNo, 25, opticalPhotonCount);
+				analysisManager->FillNtupleIColumn(ntupleNo, 24, electronCount);
+				analysisManager->FillNtupleIColumn(ntupleNo, 25, opticalPhotonCount);
 				// theta and phi (tuple col. 26 and 27 )
 				fOpticalPhotonTheta = optPhoton_Theta;
 				fOpticalPhotonPhi = optPhoton_Phi;
@@ -275,7 +275,7 @@ void NovoEventAction::EndOfEventAction(const G4Event* anEvent)
 					analysisManager->FillNtupleDColumn(ntupleNo, 0, pos.x());
 					analysisManager->FillNtupleDColumn(ntupleNo, 2, pos.y());
 					analysisManager->FillNtupleDColumn(ntupleNo, 4, pos.z());
-					analysisManager->FillNtupleDColumn(ntupleNo, 6, photoncount); 
+					analysisManager->FillNtupleIColumn(ntupleNo, 6, photoncount); 
 					analysisManager->FillNtupleDColumn(ntupleNo, 8, edep); 
 					fTimestampsN = timestamps;
 					// Ntuple filled with hit positions in NovoRunAction.cc
@@ -294,7 +294,7 @@ void NovoEventAction::EndOfEventAction(const G4Event* anEvent)
 					analysisManager->FillNtupleDColumn(ntupleNo, 1, pos.x());
 					analysisManager->FillNtupleDColumn(ntupleNo, 3, pos.y());
 					analysisManager->FillNtupleDColumn(ntupleNo, 5, pos.z());
-					analysisManager->FillNtupleDColumn(ntupleNo, 7, photoncount); 
+					analysisManager->FillNtupleIColumn(ntupleNo, 7, photoncount); 
 					analysisManager->FillNtupleDColumn(ntupleNo, 9, edep); 
 					fTimestampsP = timestamps; // Arrival times at photocathode
 					// Ntuple filled with hit positions in NovoRunAction.cc

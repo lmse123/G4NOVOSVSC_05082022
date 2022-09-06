@@ -96,8 +96,8 @@ NovoRunAction::NovoRunAction(NovoDetectorConstruction* det, NovoEventAction* ev)
 			analysisManager->CreateNtupleDColumn(ntupleNo,"PosY_P"); // 3
 			analysisManager->CreateNtupleDColumn(ntupleNo,"PosZ_N"); // 4
 			analysisManager->CreateNtupleDColumn(ntupleNo,"PosZ_P"); // 5
-			analysisManager->CreateNtupleDColumn(ntupleNo,"PhotonCount_N"); // 6
-			analysisManager->CreateNtupleDColumn(ntupleNo,"PhotonCount_P"); // 7
+			analysisManager->CreateNtupleIColumn(ntupleNo,"PhotonCount_N"); // 6
+			analysisManager->CreateNtupleIColumn(ntupleNo,"PhotonCount_P"); // 7
 			analysisManager->CreateNtupleDColumn(ntupleNo,"eDep_N"); // 8
 			analysisManager->CreateNtupleDColumn(ntupleNo,"eDep_P"); // 9
 			analysisManager->CreateNtupleDColumn(ntupleNo,"HitPosX_N", fEventAction->GetHitPosX_N()); // 10 
@@ -109,14 +109,14 @@ NovoRunAction::NovoRunAction(NovoDetectorConstruction* det, NovoEventAction* ev)
 			analysisManager->CreateNtupleDColumn(ntupleNo,"TimestampsVec_N", fEventAction->GetTimestamps_N()); // 16
 			analysisManager->CreateNtupleDColumn(ntupleNo,"TimestampsVec_P", fEventAction->GetTimestamps_P()); // 17
 			// scintillator related information
-			analysisManager->CreateNtupleDColumn(ntupleNo,"ParentID"); // 18
-			analysisManager->CreateNtupleDColumn(ntupleNo,"ParticleID"); // 19
+			analysisManager->CreateNtupleIColumn(ntupleNo,"ParentID"); // 18
+			analysisManager->CreateNtupleIColumn(ntupleNo,"ParticleID"); // 19
 			analysisManager->CreateNtupleDColumn(ntupleNo,"eDep"); // 20 - Total energy deposited in scintillator in an event
 			analysisManager->CreateNtupleDColumn(ntupleNo,"HitPosX");//,fEventAction->GetScintHitPosXs()); // 21
 			analysisManager->CreateNtupleDColumn(ntupleNo,"HitPosY");//,fEventAction->GetScintHitPosYs()); // 22
 			analysisManager->CreateNtupleDColumn(ntupleNo,"HitPosZ");//,fEventAction->GetScintHitPosZs()); // 23 
-			analysisManager->CreateNtupleDColumn(ntupleNo,"ElectronCount"); // 24
-			analysisManager->CreateNtupleDColumn(ntupleNo,"OpticalPhotonCount"); // 25
+			analysisManager->CreateNtupleIColumn(ntupleNo,"ElectronCount"); // 24
+			analysisManager->CreateNtupleIColumn(ntupleNo,"OpticalPhotonCount"); // 25
 			analysisManager->CreateNtupleDColumn(ntupleNo,"OpticalPhotonTheta",fEventAction->GetOpticalPhotonTheta()); // 26
 			analysisManager->CreateNtupleDColumn(ntupleNo,"OpticalPhotonPhi",fEventAction->GetOpticalPhotonPhi()); // 27
 			analysisManager->CreateNtupleDColumn(ntupleNo,"OpticalPhotonHitPosXs",fEventAction->GetOpticalPhotonHitPosXs()); // 28

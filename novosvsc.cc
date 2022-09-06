@@ -37,12 +37,26 @@ int main(int argc,char** argv)
 	NovoDetectorConstruction* detector = new NovoDetectorConstruction();
 	runManager->SetUserInitialization(detector);
 	G4cout << "after detector" << G4endl;
+	
 	//choose the Random engine
 	CLHEP::HepRandom::setTheEngine(new CLHEP::RanecuEngine());
 	//set random seed with system time
-	G4long seed = time(NULL);
-	CLHEP::HepRandom::setTheSeed(seed);
+	G4bool isFixedSeed = true;
+	G4long seed;
+	if (isFixedSeed == true) {
+	 seed = 1661692541;
+	}
+	else {
+	 seed = time(NULL);
+	}
 
+	CLHEP::HepRandom::setTheSeed(seed);
+	G4cout << " ======================================================" << G4endl;
+	G4cout << "Choosing random engine ... " << G4endl;
+	G4cout << "setting random seed with system time ...: " << G4endl;
+	G4cout << "seed = " << seed << G4endl;
+	G4cout << "isFixedSeed = " << isFixedSeed << G4endl;
+	G4cout << " ======================================================" << G4endl;
 
 	// Physics list
 	//NovoPhysicsList* physicsList = new NovoPhysicsList();
@@ -51,19 +65,33 @@ int main(int argc,char** argv)
 	//~ G4VModularPhysicsList* physicsList = new FTFP_BERT;
 	physicsList->ReplacePhysics(new G4EmStandardPhysics_option4());
 
+	// versions earlier than 10.7
 	G4bool OpticalPhysicsON = true;
 	if (OpticalPhysicsON == true ){
 		G4OpticalPhysics* opticalPhysics = new G4OpticalPhysics();
-		opticalPhysics->SetScintillationYieldFactor(1.);
-		//~ opticalPhysics->SetScintillationExcitationRatio(0.0);
-		opticalPhysics->SetTrackSecondariesFirst(kCerenkov, false);
-		opticalPhysics->SetTrackSecondariesFirst(kScintillation, false);
-		opticalPhysics->SetScintillationByParticleType(true);
-		opticalPhysics->SetFiniteRiseTime(true);
-		//~ opticalPhysics->GetScintillationProcess()->SetScintillationByParticleType(false);
-		//~ opticalPhysics->SetScintillationByParticleType(false);
+		G4OpticalParameters* opticalParameters = G4OpticalParameters::Instance();
+		opticalParameters->SetScintYieldFactor(1.0); // what is this?
+		opticalParameters->SetCerenkovTrackSecondariesFirst(false);
+		opticalParameters->SetScintTrackSecondariesFirst(false);
+		opticalParameters->SetScintByParticleType(true);
+		opticalParameters->SetScintEnhancedTimeConstants(true); // false = two scint components, true = three scint components
+		// opticalParameters->SetScintEnhancedTimedTimeConstants(true);        
+		opticalParameters->SetScintFiniteRiseTime(true);        // If a non-zero rise time is wanted, set the optical parameter setFiniteRiseTime to true, 
+														        // and set the material constant property SCINTILLATIONRISETIME1 to the desired value.
+
+		// opticalPhysics->SetScintillationYieldFactor(0.5);
+		// // opticalPhysics->SetScintillationYieldFactor(1.);
+		// //~ opticalPhysics->SetScintillationExcitationRatio(0.0);
+		// opticalPhysics->SetTrackSecondariesFirst(kCerenkov, false);
+		// opticalPhysics->SetTrackSecondariesFirst(kScintillation, false);
+		// opticalPhysics->SetScintillationByParticleType(true);
+		// opticalPhysics->SetFiniteRiseTime(true);
+		// //~ opticalPhysics->GetScintillationProcess()->SetScintillationByParticleType(false);
+		// //~ opticalPhysics->SetScintillationByParticleType(false);
+
 		physicsList->RegisterPhysics(opticalPhysics); // test to fix energy spect.
 	}
+
 
 	physicsList->SetVerboseLevel(0);
 	runManager->SetUserInitialization(physicsList);
