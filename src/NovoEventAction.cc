@@ -34,6 +34,7 @@
 #include "G4UImanager.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4DataVector.hh"
+#include "Instrumentor.hh"
 
 #include <algorithm>
 #include <vector>
@@ -68,15 +69,18 @@ NovoEventAction::NovoEventAction(NovoDetectorConstruction* det)
 	fOpticalPhotonStepNr(0)
 	//fRunAction(runAction)
 {
+	PROFILE_FUNCTION(); // for profiling
 }
 
 
 NovoEventAction::~NovoEventAction()
 {
+	PROFILE_FUNCTION(); // for profiling
 }
 
 void NovoEventAction::BeginOfEventAction(const G4Event* anEvent)
 {
+	PROFILE_FUNCTION(); // for profiling
 	G4EventManager::
     GetEventManager()->SetUserInformation(new NovoUserEventInformation);
 
@@ -130,6 +134,7 @@ void NovoEventAction::BeginOfEventAction(const G4Event* anEvent)
 
 void NovoEventAction::EndOfEventAction(const G4Event* anEvent)
 {
+	PROFILE_FUNCTION(); // for profiling
 	if (fVerbose >0){
 		G4cout << "EVENT " << anEvent->GetEventID() << " ____________ " << G4endl;
 	}
@@ -322,6 +327,7 @@ void NovoEventAction::EndOfEventAction(const G4Event* anEvent)
 
 G4ThreeVector NovoEventAction::CalculatePosition(G4ThreeVector vec)
 {
+	PROFILE_FUNCTION(); // for profiling
 	G4ThreeVector pos(0., 0., 0.);
 	if (fDetector->GetScintZ() == 30.0*cm){
 		G4double p0 = 1.02500e-02;
@@ -342,6 +348,7 @@ G4ThreeVector NovoEventAction::CalculatePosition(G4ThreeVector vec)
 
 G4ThreeVector NovoEventAction::CalculatePositionSigmoid(G4ThreeVector vec)
 {
+	PROFILE_FUNCTION(); // for profiling
 	G4ThreeVector pos(0., 0., 0.);
 	//~ G4cout << "fDetector->GetScintZ(): " << fDetector->GetScintZ()/cm << G4endl;
 	if (fDetector->GetScintZ() == 30.0*cm){
@@ -365,6 +372,7 @@ G4ThreeVector NovoEventAction::CalculatePositionSigmoid(G4ThreeVector vec)
 
 G4ThreeVector NovoEventAction::CalculatePositionTime(G4ThreeVector vec)
 {
+	PROFILE_FUNCTION(); // for profiling
 	G4ThreeVector pos(0., 0., 0.);
 	if (fDetector->GetScintZ() == 30.0*cm){
 		G4double p0 = -1.21310e-02;
@@ -385,6 +393,7 @@ G4ThreeVector NovoEventAction::CalculatePositionTime(G4ThreeVector vec)
 
 G4ThreeVector NovoEventAction::CalculatePositionTimeSigmoid(G4ThreeVector vec)
 {
+	PROFILE_FUNCTION(); // for profiling
 	G4ThreeVector pos(0., 0., 0.);
 	//~ G4cout << "fDetector->GetScintZ(): " << fDetector->GetScintZ()/cm << G4endl;
 	if (fDetector->GetScintZ() == 30.0*cm){

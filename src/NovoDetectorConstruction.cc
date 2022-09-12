@@ -37,6 +37,7 @@
 #include "NovoPhotocatSD.hh"
 #include "NovoScintSD.hh"
 #include "NovoBSGatingSD.hh"
+#include "Instrumentor.hh"
 
 
 
@@ -44,6 +45,7 @@
 NovoDetectorConstruction::NovoDetectorConstruction()
 : fVacuumMPT(NULL), fStilbeneMPT(NULL), fEJ276MPT(NULL)/*, fScintPillar(NULL),fScintPillar2(NULL) */
 {
+  PROFILE_FUNCTION(); // for profiling
   fWorldBox = NULL;
   fWorldLog = NULL;
   fWorldPhys = NULL;
@@ -76,10 +78,12 @@ NovoDetectorConstruction::NovoDetectorConstruction()
 
 NovoDetectorConstruction::~NovoDetectorConstruction()
 {
+  PROFILE_FUNCTION(); // for profiling
 }
 
 void NovoDetectorConstruction::DefineMaterials()
 {
+  PROFILE_FUNCTION(); // for profiling
   G4double a;  // atomic mass
   G4double z;  // atomic number
   G4double density;
@@ -386,6 +390,7 @@ void NovoDetectorConstruction::DefineMaterials()
 
 G4VPhysicalVolume* NovoDetectorConstruction::Construct()
 {
+  PROFILE_FUNCTION(); // for profiling
   SetDefaults();
   DefineMaterials();
   return ConstructDetector();
@@ -393,7 +398,7 @@ G4VPhysicalVolume* NovoDetectorConstruction::Construct()
 
 G4VPhysicalVolume* NovoDetectorConstruction::ConstructDetector()
 {
-
+  PROFILE_FUNCTION(); // for profiling
   G4double worldX = 1.0*m;
   G4double worldY = 1.0*m;
   G4double worldZ = 1.0*m;
@@ -585,6 +590,7 @@ G4VPhysicalVolume* NovoDetectorConstruction::ConstructDetector()
 
 void NovoDetectorConstruction::ConstructSDandField()
 {
+  PROFILE_FUNCTION(); // for profiling
   // Construct backscatter detector (BS)
   if(!fBS_SD.Get()){ // create fBS_SD if it doesnt already exist
     NovoBSGatingSD* bs_SD = new NovoBSGatingSD("bsSD");
@@ -634,6 +640,7 @@ void NovoDetectorConstruction::ConstructSDandField()
 }
 
 void NovoDetectorConstruction::SetDimensions(G4ThreeVector dims) {
+  PROFILE_FUNCTION(); // for profiling
   this->fScint_x=dims[0];
   this->fScint_y=dims[1];
   this->fScint_z=dims[2];
@@ -641,7 +648,7 @@ void NovoDetectorConstruction::SetDimensions(G4ThreeVector dims) {
 }
 
 void NovoDetectorConstruction::SetDefaults() {
-
+  PROFILE_FUNCTION(); // for profiling
   //Resets to default values
   fNScintX = 1;
   fNScintY = 1;

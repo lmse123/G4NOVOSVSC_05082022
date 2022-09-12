@@ -18,24 +18,28 @@
 #include "G4EmStandardPhysics_option3.hh"
 #include "Randomize.hh"
 #include "time.h"
+#include "Instrumentor.hh" // self made timer for profiling
 
 int main(int argc,char** argv)
 {
 	// Detect interactive mode (if no arguments) and define UI session
 	//
-
+	G4cout << "Begin profiling... \n";
+	Instrumentor::Get().BeginSession("profile");
+	PROFILE_FUNCTION(); // for profiling
+	
 	G4cout << "main start" << G4endl;
 	G4UIExecutive* ui = 0;
 	if ( argc == 1 ) {
 		ui = new G4UIExecutive(argc, argv);
 	}
-
 	G4cout << "Instantiating G4RunManager ..." << G4endl;
 	G4RunManager* runManager = new G4RunManager;
 
 	G4cout << "Instantiating NovoDetectorConstruction ..." << G4endl;
 	NovoDetectorConstruction* detector = new NovoDetectorConstruction();
 	runManager->SetUserInitialization(detector);
+	
 	
 	
 	//choose the Random engine
@@ -136,5 +140,7 @@ int main(int argc,char** argv)
 
 	delete visManager;
 	delete runManager;
-
+	Instrumentor::Get().EndSession();
+	G4cout << "End of profiling. \n";
+	
 }

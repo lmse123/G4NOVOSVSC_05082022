@@ -21,20 +21,22 @@
 #include "G4VPhysicalVolume.hh"
 #include "G4ParticleDefinition.hh"
 #include "G4ParticleTypes.hh"
+#include "Instrumentor.hh"
 
 
 NovoSteppingAction::NovoSteppingAction()
   : fOneStepPrimaries(false)
 {
-
+	PROFILE_FUNCTION(); // for profiling
   fExpectedNextStatus = Undefined;
 }
 
 NovoSteppingAction::~NovoSteppingAction() {}
 
 
-void NovoSteppingAction::UserSteppingAction(const G4Step * theStep){
-
+void NovoSteppingAction::UserSteppingAction(const G4Step * theStep)
+{
+	PROFILE_FUNCTION(); // for profiling
   //================================ Kyrres code =============================
 
 	G4Track* theTrack = theStep->GetTrack();

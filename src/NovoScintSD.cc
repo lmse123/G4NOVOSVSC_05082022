@@ -14,6 +14,7 @@
 #include "G4TouchableHistory.hh"
 #include "G4ios.hh"
 #include "G4VProcess.hh"
+#include "Instrumentor.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -24,6 +25,7 @@ NovoScintSD::NovoScintSD(G4String name)
 	fScintPositionsY(0),
 	fScintPositionsZ(0)
 {
+	PROFILE_FUNCTION(); // for profiling
 	// fScintCollection = NULL; // TODO: delete, its old.
 	collectionName.insert("scintCollection");
 }
@@ -36,6 +38,7 @@ NovoScintSD::~NovoScintSD() {}
 
 void NovoScintSD::SetScintPositions(const std::vector<G4ThreeVector>& positions)
 {
+	PROFILE_FUNCTION(); // for profiling
 	for (G4int i=0; i<G4int(positions.size()); i++) {
 		// G4cout << "i: " << i << G4endl;
 		if(fScintPositionsX){
@@ -53,6 +56,7 @@ void NovoScintSD::SetScintPositions(const std::vector<G4ThreeVector>& positions)
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void NovoScintSD::Initialize(G4HCofThisEvent* hitsCE)
 {
+	PROFILE_FUNCTION(); // for profiling
 	fScintCollection = new NovoScintHitsCollection(SensitiveDetectorName,collectionName[0]);
 	//A way to keep all the hits of this event in one place if needed
 	static G4int hitsCID = -1;
@@ -90,6 +94,7 @@ G4bool NovoScintSD::ProcessHits(G4Step* aStep,G4TouchableHistory* ){
 }
 
 G4bool NovoScintSD::ProcessHits_constStep(const G4Step* aStep,G4TouchableHistory* ){
+	PROFILE_FUNCTION(); // for profiling
 	
 	G4int    fVerbose = 0; // if > 0 --> print out hit information. 
 	G4int    parentID = aStep->GetTrack()->GetParentID(); //ParentID = 0 = primary particle
@@ -253,7 +258,10 @@ G4bool NovoScintSD::ProcessHits_constStep(const G4Step* aStep,G4TouchableHistory
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void NovoScintSD::EndOfEvent(G4HCofThisEvent* ) {}
+void NovoScintSD::EndOfEvent(G4HCofThisEvent* ) 
+{
+	PROFILE_FUNCTION(); // for profiling
+}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 

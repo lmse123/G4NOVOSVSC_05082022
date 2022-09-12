@@ -23,6 +23,7 @@
 #include "G4SystemOfUnits.hh"
 #include "G4String.hh"
 #include <string>
+#include "Instrumentor.hh"
 
 NovoRunAction::NovoRunAction(NovoDetectorConstruction* det, NovoEventAction* ev)
 :	G4UserRunAction(),
@@ -30,6 +31,7 @@ NovoRunAction::NovoRunAction(NovoDetectorConstruction* det, NovoEventAction* ev)
 	fDetector(det),
 	fEventAction(ev)
 {
+	PROFILE_FUNCTION(); // for profiling
 	//auto analysisManager = G4AnalysisManager::Instance();
 	// Create analysis manager
 	// The choice of analysis technology is done via selectin of a namespace
@@ -150,11 +152,13 @@ NovoRunAction::NovoRunAction(NovoDetectorConstruction* det, NovoEventAction* ev)
 
 NovoRunAction::~NovoRunAction()
 {
+	PROFILE_FUNCTION();
 	delete G4AnalysisManager::Instance();
 }
 
 void NovoRunAction::BeginOfRunAction(const G4Run*)
 {
+	PROFILE_FUNCTION();
 	// inform the runManager to save random number seed
 	G4RunManager::GetRunManager()->SetRandomNumberStore(false);
 
@@ -173,6 +177,7 @@ void NovoRunAction::BeginOfRunAction(const G4Run*)
 
 void NovoRunAction::EndOfRunAction(const G4Run* run)
 {
+	PROFILE_FUNCTION();
 	G4int nofEvents = run->GetNumberOfEvent();
 	if ( nofEvents == 0) return;
 
@@ -203,5 +208,6 @@ void NovoRunAction::EndOfRunAction(const G4Run* run)
 
 void NovoRunAction::AddNevScint(G4int n)
 {
+	PROFILE_FUNCTION();
 	fNevScint += n;
 }
