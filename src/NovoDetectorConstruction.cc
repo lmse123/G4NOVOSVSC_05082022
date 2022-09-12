@@ -197,27 +197,6 @@ void NovoDetectorConstruction::DefineMaterials()
   //~ G4double pYIELDEJ276[] = {700, 7000., 700000.};
   assert(sizeof(pYIELDEJ276) == sizeof(pEnergy));
   const G4int pNumEJ276 = sizeof(pEnergy)/sizeof(G4double);
-// OLD :
-{
-  //   // OLD - start
-  //   fEJ276MPT = new G4MaterialPropertiesTable();
-  //   fEJ276MPT->AddProperty("RINDEX", scintEnergyEJ276, scintRINDEJ276, scintNumEJ276);
-  //   fEJ276MPT->AddProperty("ABSLENGTH", scintEnergyEJ276, scintABSLEJ276, scintNumEJ276);
-  //   fEJ276MPT->AddProperty("FASTCOMPONENT", scintEnergyEJ276, scintFASTEJ276, scintNumEJ276);
-  //   fEJ276MPT->AddProperty("PROTONSCINTILLATIONYIELD", pEnergy, pYIELDEJ276, pNumEJ276);
-  //   fEJ276MPT->AddProperty("ELECTRONSCINTILLATIONYIELD", pEnergy, pYIELDEJ276, pNumEJ276);
-  //   fEJ276MPT->AddProperty("IONSCINTILLATIONYIELD", pEnergy, pYIELDEJ276, pNumEJ276);
-  //   fEJ276MPT->AddConstProperty("RESOLUTIONSCALE", 1.);
-  //   // fEJ276MPT->AddConstProperty("FASTTIMECONSTANT", 13.*ns); // Decay time - from EJ276 data sheet
-  //  fEJ276MPT->AddConstProperty("FASTTIMECONSTANT", 4*ns); // Decay time, from Grodzicka Kobylka 2020
-  //   fEJ276MPT->AddConstProperty("FASTSCINTILLATIONRISETIME", 1.0*ns); //Rise time
-  //   fEJ276MPT->AddConstProperty("SLOWTIMECONSTANT", 270.*ns); // Decay time
-  //   fEJ276MPT->AddConstProperty("SLOWSCINTILLATIONRISETIME", 35.*ns); //Rise time - Ilker "remove" 28/04/2022
-  //   //~ fEJ276MPT->AddConstProperty("SLOWTIMECONSTANT", 350.*ns); // Decay time
-  //   fEJ276MPT->AddConstProperty("YIELDRATIO", 1.0); // Proportion of scintillation light in fast component
-  //   fEJ276->SetMaterialPropertiesTable(fEJ276MPT);
-  //     // OLD - end
-}
 
   // Material property table of EJ276 - 06/09/2022 (CURRENT)
   G4double yieldratio, fast_yield, fast_rise, fast_decay, med_yield, med_rise, med_decay, slow_yield, slow_rise, slow_decay;
@@ -236,16 +215,16 @@ void NovoDetectorConstruction::DefineMaterials()
   med_decay  = 16*ns; // from Grodzicka Kobylka 2020
   G4double slow_decay_1 = 98*ns;  // from Grodzicka Kobylka 2020
   G4double slow_decay_2 = 690*ns;  // from Grodzicka Kobylka 2020
-  slow_decay= slow_decay_1;
+  slow_decay= slow_decay_2;
   fast_yield = 0.71; 
   med_yield  = 0.12;
   slow_yield = 1-fast_yield-med_yield;
   G4double slow_yield_1  = 0.08;
   G4double slow_yield_2  = 0.09;
 
-  fast_yield = 0.4; 
-  med_yield  = 0.4;
-  slow_yield = 0.2;
+  // fast_yield = 0.4; 
+  // med_yield  = 0.4;
+  // slow_yield = 0.2;
   
 
   fEJ276MPT = new G4MaterialPropertiesTable();
@@ -277,15 +256,20 @@ void NovoDetectorConstruction::DefineMaterials()
   fEJ276MPT->AddConstProperty("SCINTILLATIONRISETIME1",fast_rise);        // rise time
   fEJ276MPT->AddConstProperty("SCINTILLATIONRISETIME2",med_rise);         // ^
   fEJ276MPT->AddConstProperty("SCINTILLATIONRISETIME3",slow_rise);        // ^
-  fEJ276MPT->AddConstProperty("SCINTILLATIONYIELD1",fast_yield);          // particle independent
-  fEJ276MPT->AddConstProperty("SCINTILLATIONYIELD2",med_yield);           // ^
-  fEJ276MPT->AddConstProperty("SCINTILLATIONYIELD3",slow_yield);          // ^
+
+  // particle independent
+  // fEJ276MPT->AddConstProperty("SCINTILLATIONYIELD1",fast_yield);          // particle independent
+  // fEJ276MPT->AddConstProperty("SCINTILLATIONYIELD2",med_yield);           // ^
+  // fEJ276MPT->AddConstProperty("SCINTILLATIONYIELD3",slow_yield);          // ^
  
   fEJ276->SetMaterialPropertiesTable(fEJ276MPT);
 
   // TODO: set Birks Constant ??
-  // Double_t birksConst = ??*mm/MeV;
-  // fEJ276MPT->GetIonisation()->SetBirksConstant(birksConst);
+  G4bool isBirks = false;
+  if (isBirks){
+    // Double_t birksConst = ??*mm/MeV;
+    // fEJ276MPT->GetIonisation()->SetBirksConstant(birksConst);
+  }
 
   // fEJ276MPT->AddProperty("RINDEX", scintEnergyEJ276, scintRINDEJ276, scintNumEJ276)->SetSpline(true);
   // fEJ276MPT->AddProperty("RINDEX", scintEnergyEJ276, scintRINDEJ276, scintNumEJ276)->SetSpline(true);
@@ -334,9 +318,9 @@ void NovoDetectorConstruction::DefineMaterials()
   //   fEJ276MPT->AddConstProperty("SCINTILLATIONRISETIME3", slow_rise); 
   // }
   // fEJ276->SetMaterialPropertiesTable(fEJ276MPT);
-  // G4cout << "=============================================" << G4endl;
-  // G4cout << "EJ276 Material Properties Table:" << G4endl;
-  // G4cout << "=============================================" << G4endl;
+  G4cout << "=============================================" << G4endl;
+  G4cout << "EJ276 Material Properties Table:" << G4endl;
+  G4cout << "=============================================" << G4endl;
   // switch(n_scint_components){
   //   case(2): G4cout << "Mode: Fast + " << scint_2nd_comp << G4endl; break;
   //   case(3): G4cout << "Mode: fast + medium + slow" << G4endl; break;
